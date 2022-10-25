@@ -14,15 +14,13 @@
     <title>Test Site</title>
 </head>
 <body>
-<!-- Start of ChatBot (www.chatbot.com) code -->
-<script type="text/javascript">
-    window.__be = window.__be || {};
-    window.__be.id = "63521c2f04af750007ae08b9";
-    (function() {
-        var be = document.createElement('script'); be.type = 'text/javascript'; be.async = true;
-        be.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'cdn.chatbot.com/widget/plugin.js';
-        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(be, s);
-    })();
-</script>
-<!-- End of ChatBot code --></body>
+<script src="https://www.gstatic.com/dialogflow-console/fast/messenger-cx/bootstrap.js?v=1"></script>
+<df-messenger
+  df-cx="true"
+  location="us-central1"
+  chat-title="Guest"
+  agent-id="c3564edd-8a34-495a-adcd-55011d00d39a"
+  language-code="en"
+></df-messenger>
+</body>
 </html>
