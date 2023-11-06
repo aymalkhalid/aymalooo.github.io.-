@@ -1,28 +1,41 @@
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
+<!DOCTYPE html>
+<html> 
+  <head>
+    <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-  df-messenger {
-    z-index: 999;
-    position: fixed;
-    bottom: 16px;
-    right: 16px;
+    <title></title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      df-messenger {
+        z-index: 999;
+        position: fixed;
+        bottom: 16px;
+        right: 16px;
+        
+      }
+      :root {
+    --df-messenger-titlebar-background: #000000; /* Change this to your desired color */
   }
-</style>    
-<title>Test Site</title>
-</head>
-<body>
-<script src="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js"></script>
-<df-messenger
-  project-id="testaymal"
-  agent-id="32f93fbb-2656-422a-8f96-9c179954cf46"
-  language-code="en"
-  "intent"="START">
-  <df-messenger-chat-bubble
-   chat-title="Greeka Ferry">
-  </df-messenger-chat-bubble>
-</df-messenger>
-</body>
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <script src="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js"></script>
+    <df-messenger
+      location="us-east1"
+      project-id="twilio-dialogflowcx-ai-387518"
+      agent-id="0edcac73-e2a8-430f-a49a-98c549472351"
+      intent="+12892728392"
+      language-code="en">
+      <df-messenger-chat-bubble
+       chat-title="Woodgrove Pines"
+       chat-subtitle="Powered by Property Vista"
+       bot-writing-text="One Moment Please..."
+       chat-title-icon="https://assets-global.website-files.com/5fb6dbc0944e6b4ac5dc0cee/5fb6dbc0944e6b755adc0d69_PV%20Logo%20Colour.svg"
+       chat-icon="https://assets-global.website-files.com/5fb6dbc0944e6b4ac5dc0cee/5fb6dbc0944e6b755adc0d69_PV%20Logo%20Colour.svg">
+      </df-messenger-chat-bubble>
+    </df-messenger>  
+    <script src="" async defer></script>
+  </body>
 </html>
