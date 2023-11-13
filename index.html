@@ -7,13 +7,14 @@
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-      df-messenger {
-        z-index: 999;
-        position: fixed;
-        bottom: 16px;
-        right: 16px;
-        
-      }
+  df-messenger {
+    z-index: 999;
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    top: 0;
+    width: 350px;
+  }
       :root {
     --df-messenger-titlebar-background: #000000; /* Change this to your desired color */
   }
@@ -21,21 +22,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
   <body>
-    <script src="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js"></script>
-    <df-messenger
-    location="us-central1"
-    project-id="helloreeve"
-    agent-id="871adcd8-9b45-43cf-9f21-a40decb47fd5"
-      intent="ENWELCOME"
-      language-code="en">
-      <df-messenger-chat-bubble
-       chat-title="Powered By Reeve"
-       chat-subtitle="Sell Faster without commissions!"
-       bot-writing-text="One Moment Please..."
-       chat-title-icon="https://assets-global.website-files.com/650be959028039e8b0ea44b6/651195e3df445929672102ec_logo-white.svg"
-       chat-icon="https://assets-global.website-files.com/650be959028039e8b0ea44b6/651195e3df445929672102ec_logo-white.svg">
-      </df-messenger-chat-bubble>
-    </df-messenger>  
-    <script src="" async defer></script>
+  <script src="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js"></script>
+<df-messenger
+  project-id="helloreeve"
+  agent-id="97cab9f7-bfd9-4267-b364-afbf2b432138"
+  intent="ENWELCOME"
+  language-code="en">
+  <df-messenger-chat
+   chat-title="Reeve Vertex AI"
+   chat-subtitle="Sell Faster without commissions!"
+   bot-writing-text="One Moment Please..."  
+   chat-title-icon="https://assets-global.website-files.com/650be959028039e8b0ea44b6/651195e3df445929672102ec_logo-white.svg"
+   chat-icon="https://assets-global.website-files.com/650be959028039e8b0ea44b6/651195e3df445929672102ec_logo-white.svg">
+  </df-messenger-chat>
+</df-messenger>
   </body>
 </html>
