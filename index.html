@@ -9,12 +9,12 @@
 </head>
 <body>
     <df-messenger
-      project-id="dentai-bnxy"
-      agent-id="dcb8e77b-4d1e-4ab1-87ab-5ca7c9f51dad"
+      project-id="testaymal"
+      agent-id="32f93fbb-2656-422a-8f96-9c179954cf46"
       intent="ENWELCOME"
       language-code="en">
       <df-messenger-chat-bubble
-       chat-title="Reeve Vertex AI">
+       chat-title="Greeka Feery">
       </df-messenger-chat-bubble>
     </df-messenger>
     <style>
@@ -25,17 +25,6 @@
         right: 16px;
       }
     </style>
-<script>
-  document.addEventListener('df-messenger-loaded', function(event) {
-    // Backend Would call this When user is Authorized 
-    //Assuming df-messenger has been loaded
-    const dfMessenger = document.querySelector('df-messenger');
-    const queryParams = {
-      parameters:{"caller_id":"+17138201934","called_number":"+17138047959"}
-    };
-    dfMessenger.setQueryParameters(queryParams);
-  });
-</script>
     <script src="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js"></script>
 </body>
 </html>
