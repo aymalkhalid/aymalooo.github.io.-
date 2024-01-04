@@ -5,28 +5,24 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Base HTML</title>
-  <link rel="stylesheet" href="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/themes/df-messenger-default.css">
-</head>
-<body>
-    <df-messenger
-      project-id="testaymal"
-      agent-id="32f93fbb-2656-422a-8f96-9c179954cf46"
-      intent="ENWELCOME"
-      language-code="en">
-      <df-messenger-chat-bubble
-       chat-title="Greeka Feery">
-      </df-messenger-chat-bubble>
-    </df-messenger>
-    <style>
-      df-messenger {
-        z-index: 999;
-        position: fixed;
-        bottom: 0;
-        right: 0;
-        top: 0;
-        width: 350px;
-      }
-    </style>
-    <script src="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js"></script>
+<link rel="stylesheet" href="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/themes/df-messenger-default.css">
+<script src="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js"></script>
+<df-messenger
+  project-id="testaymal"
+  agent-id="32f93fbb-2656-422a-8f96-9c179954cf46"
+  intent="ENWELCOME"
+  language-code="en">
+  <df-messenger-chat-bubble
+   chat-title="Greeka Ferry">
+  </df-messenger-chat-bubble>
+</df-messenger>
+<style>
+  df-messenger {
+    z-index: 999;
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+  }
+</style>
 </body>
 </html>
