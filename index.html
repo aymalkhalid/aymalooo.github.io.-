@@ -11,14 +11,17 @@
     <df-messenger
       location="us-east1"
       project-id="twilio-dialogflowcx-ai-387518"
-      agent-id="3ed76048-02c4-41b6-b124-e9e688aa3a90"
+      agent-id="0edcac73-e2a8-430f-a49a-98c549472351"
       intent="start_conversation"
       language-code="en">
       <df-messenger-chat-bubble
-      chat-title="Woodgrove Pines 🎄"
+      chat-width="420"
+      chat-height="720"
+      chat-title="WoodGrove Pines🎄"
       chat-subtitle="Powered by Property Vista"
-      bot-writing-text="One Moment please..."
       chat-title-icon="https://assets-global.website-files.com/5fb6dbc0944e6b4ac5dc0cee/5fb6dbc0944e6b755adc0d69_PV%20Logo%20Colour.svg"
+      bot-writing-text="..."
+      placeholder-text="I am here to help."
       chat-icon="https://assets-global.website-files.com/5fb6dbc0944e6b4ac5dc0cee/5fb6dbc0944e6b755adc0d69_PV%20Logo%20Colour.svg">
       </df-messenger-chat-bubble>
     </df-messenger>
@@ -32,10 +35,11 @@
     </style>
     <script>
       document.addEventListener('df-messenger-loaded', function(event) {
-        //Assuming df-messenger has been loaded
+        //Assuming df-messenger has been loaded.
+        //Backend Get Property Data will do the verification.
         const dfMessenger = document.querySelector('df-messenger');
         const queryParams = {
-          parameters:{"Web_Phone_number":"+12495042131"}
+          parameters:{"Web_Phone_number":"+12892728392"}
         };
         dfMessenger.setQueryParameters(queryParams);
       });
