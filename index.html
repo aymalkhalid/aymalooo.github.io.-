@@ -1,54 +1,140 @@
-
-<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Base HTML</title>
-  <link rel="stylesheet" href="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/themes/df-messenger-default.css">
+  <title>Chatbot</title>
 </head>
 <body>
-    <df-messenger
-      location="us-east1"
-      project-id="twilio-dialogflowcx-ai-387518"
-      agent-id="0edcac73-e2a8-430f-a49a-98c549472351"
-      intent="start_conversation"
-      language-code="en">
-      <df-messenger-chat-bubble
-      chat-width="420"
-      chat-height="720"
-      chat-title="WoodGrove Pines:christmas_tree:"
-      chat-subtitle="Powered by Property Vista"
-      chat-title-icon="https://assets-global.website-files.com/5fb6dbc0944e6b4ac5dc0cee/5fb6dbc0944e6b755adc0d69_PV%20Logo%20Colour.svg"
-      bot-writing-text="..."
-      placeholder-text="I am here to help."
-      chat-icon="https://assets-global.website-files.com/5fb6dbc0944e6b4ac5dc0cee/5fb6dbc0944e6b755adc0d69_PV%20Logo%20Colour.svg">
-      </df-messenger-chat-bubble>
-    </df-messenger>
-    <style>
-      df-messenger {
-        z-index: 999;
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        /* --df-messenger-chat-background: #fafafa; 
-        --df-messenger-chat-padding: 10px;
-        --df-messenger-message-font-size: 14px; */
-        /* --df-messenger-message-font-family: "sans-serif"; */
-      }
-    </style>
-    <script>
-      document.addEventListener('df-messenger-loaded', function(event) {
-        //Assuming df-messenger has been loaded.
-        //Backend Get Property Data will do the verification.
+
+<!-- Index.html -->
+<link rel="stylesheet" href="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/themes/df-messenger-default.css">
+<script src="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js"></script>
+<df-messenger
+  project-id="eng-empire-414901"
+  agent-id="f6f8c0dc-8810-4bf2-9d49-4ef19671e0fe"
+  language-code="en"
+  max-query-length="-1">
+  <df-messenger-chat-bubble chat-title="FV Chat Bot"></df-messenger-chat-bubble>
+</df-messenger>
+<style>
+  df-messenger {
+    z-index: 999;
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+  }
+</style>
+<script type="module">
+  import { collection, doc, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";  
+  import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-analytics.js";
+  import { getAuth } from 'https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js'
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyCMrhmaeGKnEzo44xedX2hGYEFfVuqvnCQ",
+    authDomain: "eng-empire-414901.firebaseapp.com",
+    databaseURL: "https://eng-empire-414901-default-rtdb.firebaseio.com",
+    projectId: "eng-empire-414901",
+    storageBucket: "eng-empire-414901.appspot.com",
+    messagingSenderId: "700963177881",
+    appId: "1:700963177881:web:d98e76faa6ded9a9607f08",
+    measurementId: "G-PN2QR4BMHX"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const firestore = getFirestore(app);
+
+  let shouldForwardToSlack = false;
+  let newCustomerRequestedStatus = false;
+  let dfSessionId = null;
+  
+  // Set up Firestore listener
+  function setUpFirestoreListener(dfSessionId) {
+    const agentResponsesRef = collection(firestore, "agent_responses");
+    const agentResponseDoc = doc(agentResponsesRef, dfSessionId);
+    onSnapshot(agentResponseDoc, (doc) => {
+        if (doc.exists()) {
+          const agentResponse = doc.data().message;
+          const dfMessenger = document.querySelector("df-messenger");
+          dfMessenger.renderCustomText(agentResponse, true);
+        }
+    });
+}
+
+
+// Raw RESPONSE DIALOGFLOW CX
+window.addEventListener('df-response-received', (event) => {
+    const rawResponse = event.detail.raw;
+    console.log('Raw response from Dialogflow CX:', rawResponse);
+
+    dfSessionId = rawResponse.queryResult.diagnosticInfo['Session Id']
+    console.log("dfSessionId", dfSessionId);
+    
+    // Set up Firestore listener
+    setUpFirestoreListener(dfSessionId);
+
+    if (rawResponse.queryResult.parameters.human_agent_status === "True") {
+        shouldForwardToSlack = true;
+        translateYForwardToSlack(rawResponse);
+    }
+});
+
+// Translate and Forward To Slack Function
+async function translateYForwardToSlack(rawResponse) {
+    const userInput = rawResponse.queryResult.match.resolvedInput || "N/A";
+    console.log("translateYForwardToSlackUser Input:", userInput);
+    console.log('translateYForwardToSlackUser Input enetered shouldForwardToSlack:',shouldForwardToSlack)
+    try {
+        const human_response = await sendMessageToSlack(userInput, "True", dfSessionId);
         const dfMessenger = document.querySelector('df-messenger');
-        const queryParams = {
-          parameters:{"Web_Phone_number":"+12892728392"}
-        };
-        dfMessenger.setQueryParameters(queryParams);
-      });
-    </script>
-    <script src="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js"></script>
+        dfMessenger.renderCustomText(human_response, true);
+        console.log("human_response", human_response)
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+// DF USER INPUT EVENT LISTENER
+window.addEventListener('df-user-input-entered', (event) => {
+    console.log('User input entered:', event.detail.input);
+    console.log('User Input enetered shouldForwardToSlack:',shouldForwardToSlack)
+    if (shouldForwardToSlack === true) {
+        sendMessageToSlack(event.detail.input, "True", dfSessionId).then(responseMessage => {
+            console.log(responseMessage);
+        }).catch(error => console.error('Error forwarding to Slack:', error));
+    }
+});
+
+// SEND MESSAGE TO SLACK
+async function sendMessageToSlack(message, newCustomerRequestedStatus, dfSessionId) {
+    console.log('Sending message to Flask backend:', message, 'with status:', newCustomerRequestedStatus, 'and Session ID:', dfSessionId);
+    try {
+        const response = await fetch('https://7294-110-39-167-100.ngrok-free.app/post_to_slack', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message, newCustomerRequestedStatus: newCustomerRequestedStatus, dfSessionId: dfSessionId })
+        });
+
+        if (!response.ok) throw new Error("Network response was not ok");
+        const data = await response.json();
+        console.log("Message to Slack successful:", data);
+        return data.message;
+    } catch (error) {
+        console.error('Error sending message to Slack via Flask:', error);
+        throw error; // Rethrow to handle it in the calling code
+    }
+}
+</script>
 </body>
 </html>
