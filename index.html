@@ -4,50 +4,68 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Base HTML</title>
-  <link rel="stylesheet" href="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/themes/df-messenger-default.css">
+  <title>Chatbot</title>
+
 </head>
 <body>
-    <df-messenger
-      location="us-east1"
-      project-id="twilio-dialogflowcx-ai-387518"
-      agent-id="0edcac73-e2a8-430f-a49a-98c549472351"
-      intent="start_conversation"
-      language-code="en">
-      <df-messenger-chat-bubble
-      chat-width="420"
-      chat-height="720"
-      chat-title="WoodGrove Pines🎄"
-      chat-subtitle="Powered by Property Vista"
-      chat-title-icon="https://www.flexiblevision.com/wp-content/themes/flexiblevision/assets/images/logo.svg"
-      bot-writing-text="..."
-      placeholder-text="I am here to help."
-      chat-icon="https://www.flexiblevision.com/wp-content/themes/flexiblevision/assets/images/logo.svg">
-      </df-messenger-chat-bubble>
-    </df-messenger>
-    <style>
-      df-messenger {
-        z-index: 999;
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        /* --df-messenger-chat-background: #fafafa;	
-        --df-messenger-chat-padding: 10px;
-        --df-messenger-message-font-size: 14px; */
-        /* --df-messenger-message-font-family: "sans-serif"; */
-      }
-    </style>
-    <script>
-      document.addEventListener('df-messenger-loaded', function(event) {
-        //Assuming df-messenger has been loaded.
-        //Backend Get Property Data will do the verification.
-        const dfMessenger = document.querySelector('df-messenger');
-        const queryParams = {
-          parameters:{"Web_Phone_number":"+12892728392"}
-        };
-        dfMessenger.setQueryParameters(queryParams);
-      });
-    </script>
-    <script src="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js"></script>
+<!-- Link to Dialogflow Messenger CSS and JS -->
+<link rel="stylesheet" href="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/themes/df-messenger-default.css">
+<script src="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js"></script>
+<df-messenger
+  project-id="debtorcc-chat"
+  agent-id="c8816860-8dca-462e-a69c-8d2eb252352a"
+  language-code="en"
+  intent="DEBTORCC.ORG"
+  max-query-length="-1">
+  <df-messenger-chat-bubble
+   chat-title="DebtorCC.org"
+   chat-width="400"
+   chat-height="800"
+   chat-subtitle="Online Credit Counseling Course"
+   chat-title-icon="https://debtorcc.org/images/logo-white.png"
+   bot-writing-text="..."
+   placeholder-text="I am here to help.">
+  </df-messenger-chat-bubble>
+</df-messenger>
+
+<style>
+  df-messenger {
+    z-index: 999;
+    position: fixed;
+    --df-messenger-default-font-family: 'Google Sans', 'Helvetica Neue', sans-serif;
+      --df-messenger-default-font-size: 15px;
+      --df-messenger-default-font-color: #1f1f1f;
+      --df-messenger-default-secondary-font-color: #757575;
+      --df-messenger-default-icon-font-color: #444746;
+      --df-messenger-default-primary-color: #0b57d0;
+      --df-messenger-default-link-font-color: #0b57d0;
+      --df-messenger-default-link-decoration: underline;
+      --df-messenger-default-focus-color: #1e88e5;
+      --df-messenger-default-focus-color-contrast: #fff;
+      --df-messenger-default-border-color: #e0e0e0;
+      --df-messenger-default-border: 1px solid var(--df-messenger-default-border-color);
+      --df-messenger-default-border-radius: 8px;
+      --df-messenger-default-chat-border-radius: 0;
+      --df-messenger-default-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.24);
+    bottom: 16px;
+    right: 16px;
+  }
+</style>
+<script>
+  
+  const dfMessengerChatBubble = document.querySelector('df-messenger-chat-bubble');
+  dfMessengerChatBubble.openMinChat({
+    anchor: 'top-left'
+  });
+  window.addEventListener('df-button-clicked', (event) => {
+
+  const dfMessenger = document.querySelector('df-messenger');
+  dfMessenger.sendQuery(event.detail.text);
+  event.preventDefault(); // Dialogflow Messenger won't send the "event" request.
+  console.log('User clicked a button!');
+  console.log("Input",event.detail.text);
+  // Handle "event" yourself.
+});
+  </script>
 </body>
-</html> 
+</html>
