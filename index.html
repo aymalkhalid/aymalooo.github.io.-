@@ -13,7 +13,8 @@
 <script src="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js"></script>
 <df-messenger
   project-id="debtorcc-chat"
-  agent-id="c8816860-8dca-462e-a69c-8d2eb252352a"
+  agent-id="3712035b-0b11-4fd8-a93c-ab429257b3d1"
+  language-code="en"
   language-code="en"
   intent="DEBTORCC.ORG"
   max-query-length="-1">
@@ -52,7 +53,11 @@
   }
 </style>
 <script>
-  
+  window.addEventListener('df-response-received', (event) => {
+  // Remove all non-text messages.
+  console.log("Event Deatiled Data",event.detail.data)
+  });
+
   const dfMessengerChatBubble = document.querySelector('df-messenger-chat-bubble');
   dfMessengerChatBubble.openMinChat({
     anchor: 'top-left'
