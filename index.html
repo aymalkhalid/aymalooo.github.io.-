@@ -4,9 +4,16 @@
   project-id="debtorcc-chat"
   agent-id="3712035b-0b11-4fd8-a93c-ab429257b3d1"
   language-code="en"
+  intent="DEBTORCC.ORG"
   max-query-length="-1">
   <df-messenger-chat-bubble
-   chat-title="Debtor EDU CC">
+   chat-title="DebtorCC.org"
+   chat-width="400"
+   chat-height="800"
+   chat-subtitle="Online Credit Counseling Course"
+   chat-title-icon="https://debtorcc.org/images/logo-white.png"
+   bot-writing-text="..."
+   placeholder-text="I am here to help.">
   </df-messenger-chat-bubble>
 </df-messenger>
 <style>
@@ -22,3 +29,23 @@
     right: 16px;
   }
 </style>
+<script>
+  window.addEventListener('df-response-received', (event) => {
+  // Remove all non-text messages.
+  console.log("Event Deatiled Data",event.detail.data)
+  });
+
+  const dfMessengerChatBubble = document.querySelector('df-messenger-chat-bubble');
+  dfMessengerChatBubble.openMinChat({
+    anchor: 'top-left'
+  });
+  window.addEventListener('df-button-clicked', (event) => {
+
+  const dfMessenger = document.querySelector('df-messenger');
+  dfMessenger.sendQuery(event.detail.text);
+  event.preventDefault(); // Dialogflow Messenger won't send the "event" request.
+  console.log('User clicked a button!');
+  console.log("Input",event.detail.text);
+  // Handle "event" yourself.
+});
+  </script>
