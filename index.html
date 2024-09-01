@@ -1,76 +1,24 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chatbot</title>
-
-</head>
-<body>
-<!-- Link to Dialogflow Messenger CSS and JS -->
 <link rel="stylesheet" href="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/themes/df-messenger-default.css">
 <script src="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js"></script>
 <df-messenger
   project-id="debtorcc-chat"
   agent-id="3712035b-0b11-4fd8-a93c-ab429257b3d1"
   language-code="en"
-  language-code="en"
-  intent="DEBTORCC.ORG"
   max-query-length="-1">
   <df-messenger-chat-bubble
-   chat-title="DebtorCC.org"
-   chat-width="400"
-   chat-height="800"
-   chat-subtitle="Online Credit Counseling Course"
-   chat-title-icon="https://debtorcc.org/images/logo-white.png"
-   bot-writing-text="..."
-   placeholder-text="I am here to help.">
+   chat-title="Debtor EDU CC">
   </df-messenger-chat-bubble>
 </df-messenger>
-
 <style>
   df-messenger {
     z-index: 999;
     position: fixed;
-    --df-messenger-default-font-family: 'Google Sans', 'Helvetica Neue', sans-serif;
-      --df-messenger-default-font-size: 15px;
-      --df-messenger-default-font-color: #1f1f1f;
-      --df-messenger-default-secondary-font-color: #757575;
-      --df-messenger-default-icon-font-color: #444746;
-      --df-messenger-default-primary-color: #0b57d0;
-      --df-messenger-default-link-font-color: #0b57d0;
-      --df-messenger-default-link-decoration: underline;
-      --df-messenger-default-focus-color: #1e88e5;
-      --df-messenger-default-focus-color-contrast: #fff;
-      --df-messenger-default-border-color: #e0e0e0;
-      --df-messenger-default-border: 1px solid var(--df-messenger-default-border-color);
-      --df-messenger-default-border-radius: 8px;
-      --df-messenger-default-chat-border-radius: 0;
-      --df-messenger-default-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.24);
+    --df-messenger-font-color: #000;
+    --df-messenger-font-family: Google Sans;
+    --df-messenger-chat-background: #f3f6fc;
+    --df-messenger-message-user-background: #d3e3fd;
+    --df-messenger-message-bot-background: #fff;
     bottom: 16px;
     right: 16px;
   }
 </style>
-<script>
-  window.addEventListener('df-response-received', (event) => {
-  // Remove all non-text messages.
-  console.log("Event Deatiled Data",event.detail.data)
-  });
-
-  const dfMessengerChatBubble = document.querySelector('df-messenger-chat-bubble');
-  dfMessengerChatBubble.openMinChat({
-    anchor: 'top-left'
-  });
-  window.addEventListener('df-button-clicked', (event) => {
-
-  const dfMessenger = document.querySelector('df-messenger');
-  dfMessenger.sendQuery(event.detail.text);
-  event.preventDefault(); // Dialogflow Messenger won't send the "event" request.
-  console.log('User clicked a button!');
-  console.log("Input",event.detail.text);
-  // Handle "event" yourself.
-});
-  </script>
-</body>
-</html>
