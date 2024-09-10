@@ -11,6 +11,9 @@
 <!-- Link to Dialogflow Messenger CSS and JS -->
 <link rel="stylesheet" href="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/themes/df-messenger-default.css">
 <script src="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js"></script>
+<!-- Add logo to *chat-icon*,*chat-close-icon*,*chat-collapse-icon* Ensure the URL is a Public URL -->
+<!-- Update *Chat-subtitle* and *chat-title* for Debtor EDU and Debtor CC as you wish -->
+ <!-- Increase/decrease the size of the widget using the *chat-width* and *chat-height* -->
 <df-messenger
   project-id="debtorcc-chat"
   agent-id="3712035b-0b11-4fd8-a93c-ab429257b3d1"
@@ -18,56 +21,201 @@
   intent="DEBTORCC.ORG"
   max-query-length="-1">
   <df-messenger-chat-bubble
-   chat-title="DebtorCC.org"
-   chat-width="500"
-   chat-height="750"
-   chat-subtitle="Online Credit Counseling Course"
-   chat-title-icon="https://debtorcc.org/images/logo-white.png"
-   bot-writing-text="..."
-   placeholder-text="I am here to help.">
+   chat-title="DebtorCC.org" # Title of the Chat Widget
+   chat-subtitle="Online Credit Counseling Course" # Subtitle of the Chat Widget
+   chat-width="400" # Width of the Chat Widget
+   chat-height="600" # Height of the Chat Widget
+   chat-icon="https://debtorcc.org/images/logo-white.png" # Icon for the Chat Widget
+   chat-close-icon="htts://debtorcc.org/images/logo-white.png" # Close Icon for the Chat Widget
+   chat-collapse-icon	="https://debtorcc.org/images/logo-white.png" # Collapse Icon for the Chat Widget
+   bot-writing-text="..." # Text to display when the bot is generating response
+   placeholder-text="I am here to help."> # Placeholder text for the input field
   </df-messenger-chat-bubble>
 </df-messenger>
-
 <style>
+  /* Styling for the Messenger WEB Widget */
+  /* Link to Documentation for More INformation on what each CSS property https://cloud.google.com/dialogflow/cx/docs/concept/integration/dialogflow-messenger/css */
   df-messenger {
     z-index: 999;
     position: fixed;
-    --df-messenger-default-font-family: 'Google Sans', 'Helvetica Neue', sans-serif;
-      --df-messenger-default-font-size: 15px;
-      --df-messenger-default-font-color: #1f1f1f;
-      --df-messenger-default-secondary-font-color: #757575;
-      --df-messenger-default-icon-font-color: #444746;
-      --df-messenger-default-primary-color: #0b57d0;
-      --df-messenger-default-link-font-color: #0b57d0;
-      --df-messenger-default-link-decoration: underline;
-      --df-messenger-default-focus-color: #1e88e5;
-      --df-messenger-default-focus-color-contrast: #fff;
-      --df-messenger-default-border-color: #e0e0e0;
-      --df-messenger-default-border: 1px solid var(--df-messenger-default-border-color);
-      --df-messenger-default-border-radius: 8px;
-      --df-messenger-default-chat-border-radius: 0;
-      --df-messenger-default-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.24);
     bottom: 16px;
     right: 16px;
+    --df-messenger-default-font-family: 'Google Sans', 'Helvetica Neue', sans-serif;
+    --df-messenger-default-font-size: 15px;
+    --df-messenger-default-font-color: #0011ff;
+    --df-messenger-default-secondary-font-color: #757575;
+    --df-messenger-default-icon-font-color: #ff0000;
+    --df-messenger-default-primary-color: #0b57d0;
+    --df-messenger-default-link-font-color: #0b57d0;
+    --df-messenger-default-link-decoration: underline;
+    --df-messenger-default-focus-color: #1e88e5;
+    --df-messenger-default-focus-color-contrast: #fff;
+    --df-messenger-default-border-color: #e0e0e0;
+    --df-messenger-default-border: 1px solid var(--df-messenger-default-border-color);
+    --df-messenger-default-border-radius: 8px;
+    --df-messenger-default-chat-border-radius: 0;
+    --df-messenger-default-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.24);
+    --df-messenger-font-family: 'Google Sans', 'Helvetica Neue', sans-serif;
+    --df-messenger-font-size: 14px;
+    --df-messenger-font-color: #1f1f1f;
+    --df-messenger-primary-color: #0b57d0;
+    --df-messenger-focus-color: #1e88e5;
+    --df-messenger-focus-color-contrast: white;
+    --df-messenger-chat-border: none;
+    --df-messenger-chat-border-radius: 0;
+    --df-messenger-chat-window-height: 480px;
+    --df-messenger-chat-window-width: 320px;
+    --df-messenger-chat-window-offset: 16px;
+    --df-messenger-chat-window-box-shadow: none;
+    --df-messenger-chat-collapse-icon-size: unset;
+    --df-messenger-chat-bubble-icon-size: 36px;
+    --df-messenger-chat-bubble-close-icon-size: 24px;
+    --df-messenger-chat-bubble-close-icon-transform-rotate: -90deg;
+    --df-messenger-chat-bubble-icon-color: white;
+    --df-messenger-chat-bubble-size: 64px;
+    --df-messenger-chat-bubble-background: #0b57d0;
+    --df-messenger-chat-bubble-border-radius: 32px;
+    --df-messenger-chat-bubble-border: none;
+    --df-messenger-chat-border-minimized: none;
+    --df-messenger-chat-border-radius-minimized: 0;
+    --df-messenger-titlebar-background: #0b57d0;
+    --df-messenger-titlebar-padding: 0 15px;
+    --df-messenger-titlebar-border: none;
+    --df-messenger-titlebar-border-bottom: none;
+    --df-messenger-titlebar-title-align: start;
+    --df-messenger-titlebar-font-color: white;
+    --df-messenger-titlebar-letter-spacing: normal;
+    --df-messenger-titlebar-title-font-size: 18px;
+    --df-messenger-titlebar-title-font-family: 'Google Sans', 'Helvetica Neue', sans-serif;
+    --df-messenger-titlebar-title-font-weight: 400;
+    --df-messenger-titlebar-title-line-height: normal;
+    --df-messenger-titlebar-title-letter-spacing: normal;
+    --df-messenger-titlebar-subtitle-font-color: white;
+    --df-messenger-titlebar-subtitle-font-size: 18px;
+    --df-messenger-titlebar-subtitle-font-family: 'Google Sans', 'Helvetica Neue', sans-serif;
+    --df-messenger-titlebar-subtitle-font-weight: 400;
+    --df-messenger-titlebar-subtitle-line-height: normal;
+    --df-messenger-titlebar-subtitle-letter-spacing: normal;
+    --df-messenger-titlebar-title-order: row;
+    --df-messenger-titlebar-icon-width: 18px;
+    --df-messenger-titlebar-icon-height: 18px;
+    --df-messenger-titlebar-icon-padding: 0 12px 0 0;
+    --df-messenger-chat-background: #fafafa;
+    --df-messenger-chat-padding: 10px;
+    --df-messenger-messagelist-border: none;
+    --df-messenger-message-border: none;
+    --df-messenger-message-font-size: 14px;
+    --df-messenger-message-font-family: 'Google Sans', 'Helvetica Neue', sans-serif;
+    --df-messenger-message-font-weight: normal;
+    --df-messenger-message-bot-background: #ecf3fe;
+    --df-messenger-message-bot-border: none;
+    --df-messenger-message-bot-font-color: #1f1f1f;
+    --df-messenger-message-bot-font-weight: normal;
+    --df-messenger-message-user-background: #e1e3e1;
+    --df-messenger-message-user-border: none;
+    --df-messenger-message-user-font-color: #1f1f1f;
+    --df-messenger-message-user-font-weight: normal;
+    --df-messenger-message-spacing: 10px;
+    --df-messenger-message-border-radius: 8px;
+    --df-messenger-message-bot-border-top-left-radius: 8px;
+    --df-messenger-message-bot-border-top-right-radius: 8px;
+    --df-messenger-message-bot-border-bottom-left-radius: 8px;
+    --df-messenger-message-bot-border-bottom-right-radius: 8px;
+    --df-messenger-message-user-border-top-left-radius: 8px;
+    --df-messenger-message-user-border-top-right-radius: 8px;
+    --df-messenger-message-user-border-bottom-left-radius: 8px;
+    --df-messenger-message-user-border-bottom-right-radius: 8px;
+    --df-messenger-message-stack-spacing: 10px;
+    --df-messenger-message-bot-stack-border-top-left-radius: 8px;
+    --df-messenger-message-bot-stack-border-top-right-radius: 8px;
+    --df-messenger-message-bot-stack-border-bottom-left-radius: 8px;
+    --df-messenger-message-bot-stack-border-bottom-right-radius: 8px;
+    --df-messenger-message-user-stack-border-top-left-radius: 8px;
+    --df-messenger-message-user-stack-border-top-right-radius: 8px;
+    --df-messenger-message-user-stack-border-bottom-left-radius: 8px;
+    --df-messenger-message-user-stack-border-bottom-right-radius: 8px;
+    --df-messenger-message-user-writing-image-width: 24px;
+    --df-messenger-message-bot-writing-image-height: 24px;
+    --df-messenger-message-bot-writing-font-color: #1f1f1f;
+    --df-messenger-message-bot-writing-font-weight: normal;
+    --df-messenger-message-bot-writing-font-size: 14px;
+    --df-messenger-message-bot-writing-border: none;
+    --df-messenger-message-bot-writing-background: #ecf3fe;
+    --df-messenger-message-bot-writing-padding: 12px;
+    --df-messenger-message-bot-writing-spacing: 10px;
+    --df-messenger-chat-scroll-button-enabled-display: none;
+    --df-messenger-chat-scroll-button-align: center;
+    --df-messenger-chat-scroll-button-container-padding: 8px;
+    --df-messenger-chat-scroll-button-text-display: inline;
+    --df-messenger-chat-scroll-button-font-size: 14px;
+    --df-messenger-chat-scroll-button-font-color: white;
+    --df-messenger-chat-scroll-button-background: #0b57d0;
+    --df-messenger-chat-scroll-button-border-radius: 999px;
+    --df-messenger-chat-messagelist-scroll-shadow-background: radial-gradient(farthest-side at 50% 100%, rgba(0,0,0,.2), transparent) bottom;
+    --df-messenger-send-icon-color: #0b57d0;
+    --df-messenger-send-icon-color-hover: #0b57d0;
+    --df-messenger-send-icon-color-active: #0b57d0;
+    --df-messenger-send-icon-offset-x: 0;
+    --df-messenger-send-icon-offset-y: -4px;
+    --df-messenger-input-background: rgb(255, 255, 255); /* White background for better readability */
+    --df-messenger-input-padding: 10px; /* Slightly increased padding for better spacing */
+    --df-messenger-input-inner-padding: 0px 48px 0px 10px; /* Added left padding for consistency */
+    --df-messenger-input-border: 1px solid #ccc; /* Light grey border for a subtle outline */
+    --df-messenger-input-border-top: 1px solid #e0e0e0; /* Consistent with the overall design */
+    --df-messenger-input-border-bottom: 1px solid #e0e0e0; /* Added bottom border for symmetry */
+    --df-messenger-input-font-family: 'Google Sans', 'Helvetica Neue', sans-serif; /* Keeping the same font family */
+    --df-messenger-input-font-color: #333; /* Dark grey font color for better readability */
+    --df-messenger-input-font-size: 14px;
+    --df-messenger-input-font-weight: normal;
+    --df-messenger-input-box-border: none;
+    --df-messenger-input-box-focus-border: none;
+    --df-messenger-input-box-border-radius: 0;
+    --df-messenger-input-box-padding: 12px 0;
+    --df-messenger-input-box-focus-padding: 12px 0;
+    --df-messenger-input-gutter: stable;
+    --df-messenger-input-info-font-size: 14px;
+    --df-messenger-input-info-font-weight: normal;
+    --df-messenger-input-info-padding: 14px 16px;
+    --df-messenger-input-info-line-height: 20px;
+    --df-messenger-input-long-text-warning-display: none;
+    --df-messenger-input-warning-background: #fef7e0;
+    --df-messenger-input-warning-color: #410e0b;
+    --df-messenger-input-warning-icon-color: #e37400;
+    --df-messenger-input-error-background: #f9dedc;
+    --df-messenger-input-error-color: #410e0b;
+    --df-messenger-input-error-icon-color: #b3261e;
   }
 </style>
+</style>
 <script>
-  window.addEventListener('df-response-received', (event) => {
-  // Remove all non-text messages.
-  console.log("Event Deatiled Data",event.detail.data)
-  });
+window.addEventListener('df-response-received', (event) => {
+  try {
+    const match = event.detail.raw.queryResult.match;
+    if (match.matchType === 'EVENT') {
+      if (match.event === 'DEBTORCC.ORG') 
+      {
+        const dfMessenger = document.querySelector('df-messenger');
+        dfMessenger.sendRequest('event', 'CHATOPENED'); 
+      }
+    }
+  } catch (error) {
+    console.error("Error accessing event data:", error);
+  }
+});
 
   const dfMessengerChatBubble = document.querySelector('df-messenger-chat-bubble');
   dfMessengerChatBubble.openMinChat({
     anchor: 'top-left'
   });
+  // Check if 
+  // Add the Custom Event Listener for the Button Click
   window.addEventListener('df-button-clicked', (event) => {
-
   const dfMessenger = document.querySelector('df-messenger');
   console.log("Event Deatiled Data",event.detail.text)
   if (event.detail.text === "Information about the first bankruptcy course" || event.detail.text === "Information about the second bankruptcy course") 
   {
         // Handle the specific cases here
+        // pass/continue as normal
   } 
   else 
   {
