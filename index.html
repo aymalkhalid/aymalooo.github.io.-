@@ -17,8 +17,8 @@
 <df-messenger
   project-id="debtorcc-chat"
   agent-id="3712035b-0b11-4fd8-a93c-ab429257b3d1"
-  language-code="en"
-  intent="DEBTORCC.ORG"
+  language-code="en" # Language Code for the Chat Widget.
+  intent="DEBTORCC.ORG" # There is no need to change this 
   max-query-length="-1">
   <df-messenger-chat-bubble
    chat-title="DebtorCC.org" # Title of the Chat Widget
@@ -188,25 +188,6 @@
 </style>
 </style>
 <script>
-window.addEventListener('df-response-received', (event) => {
-  try {
-    const match = event.detail.raw.queryResult.match;
-    if (match.matchType === 'EVENT') {
-      if (match.event === 'DEBTORCC.ORG') 
-      {
-        const dfMessenger = document.querySelector('df-messenger');
-        dfMessenger.sendRequest('event', 'CHATOPENED'); 
-      }
-    }
-  } catch (error) {
-    console.error("Error accessing event data:", error);
-  }
-});
-
-  const dfMessengerChatBubble = document.querySelector('df-messenger-chat-bubble');
-  dfMessengerChatBubble.openMinChat({
-    anchor: 'top-left'
-  });
   // Check if 
   // Add the Custom Event Listener for the Button Click
   window.addEventListener('df-button-clicked', (event) => {
