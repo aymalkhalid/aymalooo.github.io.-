@@ -17,8 +17,8 @@
 <df-messenger
   project-id="debtorcc-chat"
   agent-id="3712035b-0b11-4fd8-a93c-ab429257b3d1"
-  language-code="en" # Language Code for the Chat Widget.
-  intent="DEBTORCC.ORG" # There is no need to change this 
+  language-code="en" # Language Code for the Chat Widget. es for spanish.
+  intent="DEBTORCC.ORG" # There is no need to change this. This is the intent that will be triggered when the Chat Widget is loaded.
   max-query-length="-1">
   <df-messenger-chat-bubble
    chat-title="DebtorCC.org" # Title of the Chat Widget
@@ -35,6 +35,7 @@
 <style>
   /* Styling for the Messenger WEB Widget */
   /* Link to Documentation for More INformation on what each CSS property https://cloud.google.com/dialogflow/cx/docs/concept/integration/dialogflow-messenger/css */
+  /* CSS PROPERTIES */
   df-messenger {
     z-index: 999;
     position: fixed;
@@ -187,26 +188,5 @@
   }
 </style>
 </style>
-<script>
-  // Check if 
-  // Add the Custom Event Listener for the Button Click
-  window.addEventListener('df-button-clicked', (event) => {
-  const dfMessenger = document.querySelector('df-messenger');
-  console.log("Event Deatiled Data",event.detail.text)
-  if (event.detail.text === "Information about the first bankruptcy course" || event.detail.text === "Information about the second bankruptcy course") 
-  {
-        // Handle the specific cases here
-        // pass/continue as normal
-  } 
-  else 
-  {
-        dfMessenger.sendQuery(event.detail.text);
-        event.preventDefault(); // Dialogflow Messenger won't send the "event" request.
-  }
-  console.log('User clicked a button!');
-  console.log("Input",event.detail.text);
-  // Handle "event" yourself.
-});
-  </script>
 </body>
 </html>
