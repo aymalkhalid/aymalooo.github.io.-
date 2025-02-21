@@ -1,195 +1,302 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chatbot</title>
-
+    <title>Home</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-<!-- Link to Dialogflow Messenger CSS and JS -->
-<link rel="stylesheet" href="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/themes/df-messenger-default.css">
-<script src="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js"></script>
-<!-- Add logo to *chat-icon*,*chat-close-icon*,*chat-collapse-icon* Ensure the URL is a Public URL -->
-<!-- Update *Chat-subtitle* and *chat-title* for Debtor EDU and Debtor CC as you wish -->
- <!-- Increase/decrease the size of the widget using the *chat-width* and *chat-height* -->
-<df-messenger
-  location="us-east1"
-  project-id="eng-empire-414901"
-  agent-id="1bdd1a55-6cb1-4f04-8e05-263cb72b9386"
-  language-code="en" # Language Code for the Chat Widget. es for spanish.
-  intent="START" # There is no need to change this. This is the intent that will be triggered when the Chat Widget is loaded.
-  max-query-length="-1">
-  <df-messenger-chat-bubble
-   chat-title="Bebang Halo Halo" # Title of the Chat Widget
-   chat-subtitle="Get the best Halo Halo in the Philippines" # Subtitle of the Chat Widget
-   chat-width="400" # Width of the Chat Widget
-   chat-height="600" # Height of the Chat Widget
+    <link rel="stylesheet" href="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/themes/df-messenger-default.css">
+    <script src="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js"></script>
+    <df-messenger
+      project-id="agent-demos-v1"
+      agent-id="fa47c7e0-4ea7-431d-ba0f-a62126f4070a"
+      language-code="en"
+      max-query-length="-1"
+      allow-feedback="all"
+      intent="WELCOME"
+      allow-feedback="all"
+      >
+      <df-messenger-chat
+       chat-title="Hybrid DISH Agent"
+       >
+      </df-messenger-chat>
+    </df-messenger>
+    <button id="start-voice-input" class="voice-button">
+      <i class="fas fa-microphone"></i>
+    </button>
+    <div id="error-message" style="position: fixed; bottom: 85px; right: 20px; color: red;"></div>
+    <style>
+      df-messenger {
+        z-index: 999;
+        position: fixed;
+        --df-messenger-font-color: #000;
+        --df-messenger-font-family: Google Sans;
+        --df-messenger-chat-background: #f3f6fc;
+        --df-messenger-message-user-background: #d3e3fd;
+        --df-messenger-message-bot-background: #fff;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        width: 80%;
+        height: 100%;
+      }
+      .voice-button {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+      .voice-button:focus {
+        outline: none;
+      }
+      .voice-button.listening {
+        background-color: #ff0000;
+        animation: pulse-animation 1s infinite;
+      }
+      .pulse {
+        animation: pulse-animation 2s infinite;
+      }
+      @keyframes pulse-animation {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.2);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+      .feedback-wrapper {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 10px;
+      }
+      .feedback-wrapper label {
+        display: flex;
+        align-items: center;
+      }
+      .feedback-wrapper input[type="checkbox"] {
+        margin-right: 10px;
+      }
+      .feedback-wrapper button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 10px;
+      }
+      .feedback-wrapper button:hover {
+        background-color: #0056b3;
+      }
+      .feedback-wrapper button:focus {
+        outline: none;
+      }
+      .feedback-wrapper textarea {
+        width: 100%;
+        height: 100px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+        resize: vertical;
+      }
+      .feedback-wrapper textarea:focus {
+        border-color: #007bff;
+        outline: none;
+      }
+    </style>
+    <script>
+      const startVoiceInputButton = document.getElementById('start-voice-input');
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      let isRecognitionActive = false;
+    
+      startVoiceInputButton.addEventListener('click', () => {
+        if (!isRecognitionActive) {
+          startVoiceInputButton.innerHTML = '<i class="fas fa-stop"></i>';
+          startVoiceInputButton.classList.add('listening');
+          recognition.start();
+          isRecognitionActive = true;
+        }
+      });
+    
+      recognition.addEventListener('result', (event) => {
+        const transcript = event.results[0][0].transcript;
+        const dfMessenger = document.querySelector('df-messenger');
+        dfMessenger.renderCustomText(transcript, false);
+        dfMessenger.sendRequest('query', transcript);
+      });
+    
+      recognition.addEventListener('end', () => {
+        if (isRecognitionActive) {
+          recognition.stop();
+          isRecognitionActive = false;
+          startVoiceInputButton.innerHTML = '<i class="fas fa-microphone"></i>';
+          startVoiceInputButton.classList.remove('listening');
+        }
+      });
+    
+      recognition.addEventListener('error', (event) => {
+        console.error('Speech recognition error detected: ' + event.error);
+        const errorMessage = document.getElementById('error-message');
+        switch (event.error) {
+          case 'no-speech':
+            errorMessage.textContent = 'No speech detected.';
+            break;
+          case 'audio-capture':
+            errorMessage.textContent = 'Microphone access denied or not available.';
+            break;
+          case 'not-allowed':
+            errorMessage.textContent = 'Permission to use the microphone was denied.';
+            break;
+          default:
+            errorMessage.textContent = 'An error occurred during speech recognition.';
+        }
+        startVoiceInputButton.classList.remove('listening');
+      });
+    </script>
+<!--  -->
 
-   bot-writing-text="..." # Text to display when the bot is generating response
-   placeholder-text="I am here to help."> # Placeholder text for the input field
-  </df-messenger-chat-bubble>
-</df-messenger>
-<style>
-/*      chat-icon="https://bebang.ph/assets/img/logo.png" # Icon for the Chat Widget 
-     chat-close-icon="https://bebang.ph/assets/img/logo.png" # Close Icon for the Chat Widget
-   chat-collapse-icon	="https://bebang.ph/assets/img/logo.png" # Collapse Icon for the Chat Widget
-  */
-  /* Styling for the Messenger WEB Widget */
-  /* Link to Documentation for More INformation on what each CSS property https://cloud.google.com/dialogflow/cx/docs/concept/integration/dialogflow-messenger/css */
-  /* CSS PROPERTIES */
-  df-messenger {
-    z-index: 999;
-    position: fixed;
-    bottom: 16px;
-    right: 16px;
-    --df-messenger-default-font-family: 'Google Sans', 'Helvetica Neue', sans-serif;
-    --df-messenger-default-font-size: 15px;
-    --df-messenger-default-font-color: #0011ff;
-    --df-messenger-default-secondary-font-color: #757575;
-    --df-messenger-default-icon-font-color: #ff0000;
-    --df-messenger-default-primary-color: #0b57d0;
-    --df-messenger-default-link-font-color: #0b57d0;
-    --df-messenger-default-link-decoration: underline;
-    --df-messenger-default-focus-color: #1e88e5;
-    --df-messenger-default-focus-color-contrast: #fff;
-    --df-messenger-default-border-color: #e0e0e0;
-    --df-messenger-default-border: 1px solid var(--df-messenger-default-border-color);
-    --df-messenger-default-border-radius: 8px;
-    --df-messenger-default-chat-border-radius: 0;
-    --df-messenger-default-box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.24);
-    --df-messenger-font-family: 'Google Sans', 'Helvetica Neue', sans-serif;
-    --df-messenger-font-size: 14px;
-    --df-messenger-font-color: #1f1f1f;
-    --df-messenger-primary-color: #0b57d0;
-    --df-messenger-focus-color: #1e88e5;
-    --df-messenger-focus-color-contrast: white;
-    --df-messenger-chat-border: none;
-    --df-messenger-chat-border-radius: 0;
-    --df-messenger-chat-window-height: 480px;
-    --df-messenger-chat-window-width: 320px;
-    --df-messenger-chat-window-offset: 16px;
-    --df-messenger-chat-window-box-shadow: none;
-    --df-messenger-chat-collapse-icon-size: unset;
-    --df-messenger-chat-bubble-icon-size: 36px;
-    --df-messenger-chat-bubble-close-icon-size: 24px;
-    --df-messenger-chat-bubble-close-icon-transform-rotate: -90deg;
-    --df-messenger-chat-bubble-icon-color: white;
-    --df-messenger-chat-bubble-size: 64px;
-    --df-messenger-chat-bubble-background: #0b57d0;
-    --df-messenger-chat-bubble-border-radius: 32px;
-    --df-messenger-chat-bubble-border: none;
-    --df-messenger-chat-border-minimized: none;
-    --df-messenger-chat-border-radius-minimized: 0;
-    --df-messenger-titlebar-background: #0b57d0;
-    --df-messenger-titlebar-padding: 0 15px;
-    --df-messenger-titlebar-border: none;
-    --df-messenger-titlebar-border-bottom: none;
-    --df-messenger-titlebar-title-align: start;
-    --df-messenger-titlebar-font-color: white;
-    --df-messenger-titlebar-letter-spacing: normal;
-    --df-messenger-titlebar-title-font-size: 18px;
-    --df-messenger-titlebar-title-font-family: 'Google Sans', 'Helvetica Neue', sans-serif;
-    --df-messenger-titlebar-title-font-weight: 400;
-    --df-messenger-titlebar-title-line-height: normal;
-    --df-messenger-titlebar-title-letter-spacing: normal;
-    --df-messenger-titlebar-subtitle-font-color: white;
-    --df-messenger-titlebar-subtitle-font-size: 18px;
-    --df-messenger-titlebar-subtitle-font-family: 'Google Sans', 'Helvetica Neue', sans-serif;
-    --df-messenger-titlebar-subtitle-font-weight: 400;
-    --df-messenger-titlebar-subtitle-line-height: normal;
-    --df-messenger-titlebar-subtitle-letter-spacing: normal;
-    --df-messenger-titlebar-title-order: row;
-    --df-messenger-titlebar-icon-width: 18px;
-    --df-messenger-titlebar-icon-height: 18px;
-    --df-messenger-titlebar-icon-padding: 0 12px 0 0;
-    --df-messenger-chat-background: #fafafa;
-    --df-messenger-chat-padding: 10px;
-    --df-messenger-messagelist-border: none;
-    --df-messenger-message-border: none;
-    --df-messenger-message-font-size: 14px;
-    --df-messenger-message-font-family: 'Google Sans', 'Helvetica Neue', sans-serif;
-    --df-messenger-message-font-weight: normal;
-    --df-messenger-message-bot-background: #ecf3fe;
-    --df-messenger-message-bot-border: none;
-    --df-messenger-message-bot-font-color: #1f1f1f;
-    --df-messenger-message-bot-font-weight: normal;
-    --df-messenger-message-user-background: #e1e3e1;
-    --df-messenger-message-user-border: none;
-    --df-messenger-message-user-font-color: #1f1f1f;
-    --df-messenger-message-user-font-weight: normal;
-    --df-messenger-message-spacing: 10px;
-    --df-messenger-message-border-radius: 8px;
-    --df-messenger-message-bot-border-top-left-radius: 8px;
-    --df-messenger-message-bot-border-top-right-radius: 8px;
-    --df-messenger-message-bot-border-bottom-left-radius: 8px;
-    --df-messenger-message-bot-border-bottom-right-radius: 8px;
-    --df-messenger-message-user-border-top-left-radius: 8px;
-    --df-messenger-message-user-border-top-right-radius: 8px;
-    --df-messenger-message-user-border-bottom-left-radius: 8px;
-    --df-messenger-message-user-border-bottom-right-radius: 8px;
-    --df-messenger-message-stack-spacing: 10px;
-    --df-messenger-message-bot-stack-border-top-left-radius: 8px;
-    --df-messenger-message-bot-stack-border-top-right-radius: 8px;
-    --df-messenger-message-bot-stack-border-bottom-left-radius: 8px;
-    --df-messenger-message-bot-stack-border-bottom-right-radius: 8px;
-    --df-messenger-message-user-stack-border-top-left-radius: 8px;
-    --df-messenger-message-user-stack-border-top-right-radius: 8px;
-    --df-messenger-message-user-stack-border-bottom-left-radius: 8px;
-    --df-messenger-message-user-stack-border-bottom-right-radius: 8px;
-    --df-messenger-message-user-writing-image-width: 24px;
-    --df-messenger-message-bot-writing-image-height: 24px;
-    --df-messenger-message-bot-writing-font-color: #1f1f1f;
-    --df-messenger-message-bot-writing-font-weight: normal;
-    --df-messenger-message-bot-writing-font-size: 14px;
-    --df-messenger-message-bot-writing-border: none;
-    --df-messenger-message-bot-writing-background: #ecf3fe;
-    --df-messenger-message-bot-writing-padding: 12px;
-    --df-messenger-message-bot-writing-spacing: 10px;
-    --df-messenger-chat-scroll-button-enabled-display: none;
-    --df-messenger-chat-scroll-button-align: center;
-    --df-messenger-chat-scroll-button-container-padding: 8px;
-    --df-messenger-chat-scroll-button-text-display: inline;
-    --df-messenger-chat-scroll-button-font-size: 14px;
-    --df-messenger-chat-scroll-button-font-color: white;
-    --df-messenger-chat-scroll-button-background: #0b57d0;
-    --df-messenger-chat-scroll-button-border-radius: 999px;
-    --df-messenger-chat-messagelist-scroll-shadow-background: radial-gradient(farthest-side at 50% 100%, rgba(0,0,0,.2), transparent) bottom;
-    --df-messenger-send-icon-color: #0b57d0;
-    --df-messenger-send-icon-color-hover: #0b57d0;
-    --df-messenger-send-icon-color-active: #0b57d0;
-    --df-messenger-send-icon-offset-x: 0;
-    --df-messenger-send-icon-offset-y: -4px;
-    --df-messenger-input-background: rgb(255, 255, 255); /* White background for better readability */
-    --df-messenger-input-padding: 10px; /* Slightly increased padding for better spacing */
-    --df-messenger-input-inner-padding: 0px 48px 0px 10px; /* Added left padding for consistency */
-    --df-messenger-input-border: 1px solid #ccc; /* Light grey border for a subtle outline */
-    --df-messenger-input-border-top: 1px solid #e0e0e0; /* Consistent with the overall design */
-    --df-messenger-input-border-bottom: 1px solid #e0e0e0; /* Added bottom border for symmetry */
-    --df-messenger-input-font-family: 'Google Sans', 'Helvetica Neue', sans-serif; /* Keeping the same font family */
-    --df-messenger-input-font-color: #333; /* Dark grey font color for better readability */
-    --df-messenger-input-font-size: 14px;
-    --df-messenger-input-font-weight: normal;
-    --df-messenger-input-box-border: none;
-    --df-messenger-input-box-focus-border: none;
-    --df-messenger-input-box-border-radius: 0;
-    --df-messenger-input-box-padding: 12px 0;
-    --df-messenger-input-box-focus-padding: 12px 0;
-    --df-messenger-input-gutter: stable;
-    --df-messenger-input-info-font-size: 14px;
-    --df-messenger-input-info-font-weight: normal;
-    --df-messenger-input-info-padding: 14px 16px;
-    --df-messenger-input-info-line-height: 20px;
-    --df-messenger-input-long-text-warning-display: none;
-    --df-messenger-input-warning-background: #fef7e0;
-    --df-messenger-input-warning-color: #410e0b;
-    --df-messenger-input-warning-icon-color: #e37400;
-    --df-messenger-input-error-background: #f9dedc;
-    --df-messenger-input-error-color: #410e0b;
-    --df-messenger-input-error-icon-color: #b3261e;
+<script>
+  // Global arrays to store feedback text and selected options
+  const feedbackTextsList = [];
+  const selectedOptionsList = [];
+
+  class CustomFeedbackElement extends HTMLElement {
+    constructor() {
+      super();
+      this.renderRoot = this.attachShadow({ mode: 'open' });
+    }
+
+    connectedCallback() {
+      const wrapper = document.createElement('div');
+      wrapper.classList.add('feedback-wrapper');
+
+      // Create feedback options
+      const options = [
+        "Inaccurate", "Partially Accurate", "Unhelpful", "Context Lost", "Unnatural Language", "Repetitive", "Edge Case Failure", "Human Escalation Needed"
+      ];
+
+      options.forEach(option => {
+        const label = document.createElement('label');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.value = option;
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(option));
+        wrapper.appendChild(label);
+      });
+
+      // Create text area for manual feedback
+      // Add a Break
+      wrapper.appendChild(document.createElement('br'));
+      wrapper.appendChild(document.createElement('br'));
+      const textArea = document.createElement('textarea');
+      
+      textArea.placeholder = 'Enter your feedback here...';
+      textArea.style.width = '100%';
+      textArea.style.height = '100px';
+      textArea.id = 'feedback-text';
+      wrapper.appendChild(textArea);
+
+      // Create submit button
+      const button = document.createElement('button');
+      button.innerText = 'Submit';
+      button.addEventListener('click', () => {
+        this._onSubmitClick();
+      });
+      wrapper.appendChild(button);
+
+      this.renderRoot.appendChild(wrapper);
+    }
+
+    _onSubmitClick() {
+      const feedbackText = this.renderRoot.getElementById('feedback-text').value;
+      const checkboxes = this.renderRoot.querySelectorAll('input[type="checkbox"]');
+      const selectedOptions = Array.from(checkboxes)
+        .filter(checkbox => checkbox.checked)
+        .map(checkbox => checkbox.value);
+      
+      // Append feedback to global arrays
+      feedbackTextsList.push(feedbackText);
+      selectedOptionsList.push(selectedOptions);
+
+      const event = new CustomEvent("df-custom-submit-feedback-clicked", {
+        detail: JSON.stringify({
+          "feedback": feedbackTextsList,
+          "selectedOptions": selectedOptionsList
+        }),
+        bubbles: true,
+        composed: true,
+      });
+      this.dispatchEvent(event);
+    }
   }
-</style>
-</style>
+
+  (function() {customElements.define('df-external-custom-feedback', CustomFeedbackElement);})();
+
+  // Add event listener to log feedback to console
+  document.addEventListener('df-custom-submit-feedback-clicked', (event) => {
+    console.log('Feedback submitted:', event.detail); 
+    // Feedback submitted: {"feedback":"","selectedOptions":["Unhelpful"]}
+    //Access the feedback and selected options
+    const feedback = JSON.parse(event.detail);
+    setQueryParameters(feedback.feedback, feedback.selectedOptions);
+  });
+
+  
+</script>
+<script>
+  // Listen to response received event to keep track of the session
+  const dfMessenger = document.querySelector('df-messenger');
+  var sessionId = "";
+  var AIMessage = "";
+  dfMessenger.addEventListener('df-response-received', (event) => {
+    console.log('Response received:', event.detail.raw.queryResult.diagnosticInfo);
+    // Handle response data
+    const responseData = event.detail;
+    // Log the message
+    if (responseData.messages && responseData.messages.length > 0) {
+      console.log('Message:', responseData.messages[0].text);
+      AIMessage = responseData.messages[0].text;
+      }
+  });
+
+
+  // 
+  function setQueryParameters(feedbackTextsList, selectedOptionsList) {
+
+    const dfMessenger = document.querySelector('df-messenger');
+    const queryParameters = {
+      parameters: {
+        feedbackTextsList: feedbackTextsList,
+        selectedOptionsList: selectedOptionsList
+      }
+    };
+    dfMessenger.setQueryParameters(queryParameters);  
+    console.log("Set query parameters with feedback and selected options");
+    console.log("Feedback Texts List: ", feedbackTextsList);
+    console.log("Selected Options List: ", selectedOptionsList);
+    console.log("AI Message: ", AIMessage);
+  }
+</script>
 </body>
 </html>
