@@ -444,16 +444,97 @@
   }
 </script>
 <!--  -->
+
+<!--  -->
 <script>
+  /**
+   * @fileoverview DISH Agent Dialogflow Integration Script
+   * 
+   * This script manages the integration between the web interface and Dialogflow CX,
+   * handling speech synthesis, voice feedback, user information management, and 
+   * custom feedback collection for the DISH Networks agent interview simulation.
+   * 
+   * @version 1.0.0
+   * @author DISH Networks Team
+   * 
+   * ===== GLOBAL VARIABLES =====
+   * 
+   * @var {Array} speechSynthesisVoices - Stores available speech synthesis voices
+   * @var {boolean} voicesLoaded - Flag indicating if voices have been loaded
+   * @var {boolean} isFirstResponse - Flag for special handling of first AI response
+   * @var {number} FlagWelcome - Tracks welcome message state (0: not sent, 1: preparing, 2: sent)
+   * @var {string} AIMessage - Stores the most recent AI response text
+   * @var {Array} feedbackTextsList - Collects all feedback texts submitted by users
+   * @var {Array} selectedOptionsList - Collects all feedback options selected by users
+   * 
+   * ===== MAIN COMPONENTS =====
+   * 
+   * 1. CUSTOM FEEDBACK ELEMENT
+   *    - Creates a custom web component for collecting user feedback
+   *    - Renders checkboxes for quick feedback options and text area for detailed comments
+   *    - Dispatches custom events when feedback is submitted
+   * 
+   * 2. SPEECH SYNTHESIS MANAGEMENT
+   *    - Loads and manages available speech synthesis voices
+   *    - Handles text-to-speech conversion for AI responses
+   *    - Manages speaking status indicators
+   * 
+   * 3. DIALOGFLOW INTEGRATION
+   *    - Listens for responses from Dialogflow Messenger
+   *    - Processes and speaks AI responses
+   *    - Handles user information for personalized interactions
+   * 
+   * 4. PARAMETER MANAGEMENT
+   *    - Sets query parameters for Dialogflow with user information
+   *    - Passes feedback data to Dialogflow for analytics
+   * 
+   * ===== DETAILED WORKFLOW =====
+   * 
+   * 1. On page load:
+   *    - Attempts to load speech synthesis voices
+   *    - Sets up event listeners for voice changes
+   * 
+   * 2. When user submits the welcome form:
+   *    - User information is stored and passed to Dialogflow
+   *    - Welcome message is triggered
+   * 
+   * 3. When Dialogflow responds:
+   *    - Response text is captured and spoken aloud
+   *    - First response gets special handling (delayed speaking if needed)
+   * 
+   * 4. When user provides feedback:
+   *    - Feedback text and selected options are stored
+   *    - Data is passed to Dialogflow via query parameters
+   * 
+   * ===== FUNCTION REFERENCE =====
+   */
+  
+
+  let speechSynthesisVoices = [];
+  let voicesLoaded = false;
+  let isFirstResponse = true;
+  let FlagWelcome = 0;
+  let AIMessage = '';
   // Global arrays to store feedback text and selected options
   const feedbackTextsList = [];
   const selectedOptionsList = [];
+  const feedbackAITextList = [];
+  /**
+   * @class CustomFeedbackElement
+   * @extends HTMLElement
+   * @description Custom web component that creates a feedback interface with checkboxes and text input
+   */    
   class CustomFeedbackElement extends HTMLElement {
     constructor() {
       super();
       this.renderRoot = this.attachShadow({ mode: 'open' });
     }
-
+/**
+ * @method connectedCallback
+ * @description Lifecycle method that runs when the element is added to the DOM
+ * Renders the feedback interface with checkboxes and text area, and adds a submit button.
+ * Dispatches a custom event with feedback data when the submit button is clicked. 
+ */
     connectedCallback() {
       const wrapper = document.createElement('div');
       wrapper.classList.add('feedback-wrapper');
@@ -502,11 +583,13 @@
       
       feedbackTextsList.push(feedbackText);
       selectedOptionsList.push(selectedOptions);
-
+      feedbackAITextList.push(AIMessage)
+      // Dispatch custom event with feedback data
       const event = new CustomEvent("df-custom-submit-feedback-clicked", {
         detail: JSON.stringify({
           "feedback": feedbackTextsList,
-          "selectedOptions": selectedOptionsList
+          "selectedOptions": selectedOptionsList,
+          "feedbackAITextList": feedbackAITextList
         }),
         bubbles: true,
         composed: true,
@@ -514,23 +597,25 @@
       this.dispatchEvent(event);
     }
   }
-
+/**
+ * @function funsetQueryParameters
+ * @description Sets query parameters for Dialogflow with feedback data
+ * @param {Array} feedbackTextsList - List of feedback text submitted by users
+ * 
+ */ 
   (function() {customElements.define('df-external-custom-feedback', CustomFeedbackElement);})();
 
   document.addEventListener('df-custom-submit-feedback-clicked', (event) => {
     console.log('Feedback submitted:', event.detail); 
-    const feedback = JSON.parse(event.detail);
-    funsetQueryParameters(feedback.feedback, feedback.selectedOptions);
-  });
-</script>
-<!--  -->
-<script>
-  let speechSynthesisVoices = [];
-  let voicesLoaded = false;
-  let isFirstResponse = true;
-  let FlagWelcome = 0;
-  let AIMessage = '';
-  
+    const submitted_feedback = JSON.parse(event.detail);
+    funsetQueryParameters(submitted_feedback.feedback, submitted_feedback.selectedOptions, submitted_feedback.feedbackAITextList);
+  });   
+/**
+ * @function loadVoices
+ * @description Loads available speech synthesis voices and sets the global voicesLoaded flag
+ * @returns {boolean} - Flag indicating if voices have been loaded
+ * 
+ */ 
   function loadVoices() {
     console.log('Loading voices...');
     speechSynthesisVoices = window.speechSynthesis.getVoices();
@@ -538,16 +623,24 @@
     console.log(`${speechSynthesisVoices.length} voices loaded, voicesLoaded=${voicesLoaded}`);
     return voicesLoaded;
   }
-  
+  // 
   loadVoices();
-  
+/**
+ * @function showSpeechStatus
+ * @description Displays the speaking status indicator
+ * @param {boolean} isSpeaking - Flag indicating if speech synthesis is active
+ */
   if (window.speechSynthesis.onvoiceschanged !== undefined) {
     window.speechSynthesis.onvoiceschanged = function() {
       voicesLoaded = loadVoices();
       console.log('Voices changed event triggered');
     };
   }
-
+/**
+ * @function showSpeechStatus
+ * @description Displays the speaking status indicator
+ * @param {boolean} isSpeaking - Flag indicating if speech synthesis is active
+ */
   function showSpeechStatus(isSpeaking) {
     const speechStatus = document.getElementById('speech-status');
     if (isSpeaking) {
@@ -557,90 +650,102 @@
       speechStatus.style.display = "none";
     }
   }
-  
-  function speakText(text) {
-    if (!text || typeof text !== 'string') {
-      console.log('Invalid text to speak:', text);
-      return;
-    }
-    console.log('Speaking:', text);
-    
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    const voices = speechSynthesisVoices.length > 0 ? speechSynthesisVoices : window.speechSynthesis.getVoices();
-    
-    const selectedVoice = voices.find(voice => voice.name === 'Google US English');
-    console.log("Selected voice:", selectedVoice ? selectedVoice.name : "Voice not found");
-    
-    if (selectedVoice) {
-      utterance.voice = selectedVoice;
-    } else {
-      const fallbackVoice = voices.find(voice => voice.lang === 'en-US');
-      if (fallbackVoice) {
-        utterance.voice = fallbackVoice;
-        console.log("Using fallback voice:", fallbackVoice.name);
+/**
+ * @function speakText
+ * @description Converts text to speech using the available voice
+ * @param {string} text - Text to be spoken
+ * 
+ */
+  function speakText(text) 
+  {
+      if (!text || typeof text !== 'string') {
+        console.log('Invalid text to speak:', text);
+        return;
       }
-    }
-    
-    utterance.lang = 'en-US';
-    utterance.rate = 1.0;
-    utterance.pitch = 1.2;
-    
-    utterance.onstart = () => {
-      console.log('Started speaking');
-      showSpeechStatus(true);
-      speechWasInterrupted = false;
-    };
-    
-    utterance.onend = () => {
-      console.log('Finished speaking');
-      showSpeechStatus(false);
-      if (!speechWasInterrupted) {
-        console.log('Speech completed normally');
+      console.log('Speaking:', text);
+      
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      const voices = speechSynthesisVoices.length > 0 ? speechSynthesisVoices : window.speechSynthesis.getVoices();
+      
+      const selectedVoice = voices.find(voice => voice.name === 'Google US English');
+      console.log("Selected voice:", selectedVoice ? selectedVoice.name : "Voice not found");
+      
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      } else {
+        const fallbackVoice = voices.find(voice => voice.lang === 'en-US');
+        if (fallbackVoice) {
+          utterance.voice = fallbackVoice;
+          console.log("Using fallback voice:", fallbackVoice.name);
+        }
       }
-    };
-    
-    utterance.onerror = (err) => {
-      console.error('Speech synthesis error:', err);
-      showSpeechStatus(false);
-    };
-    
-    window.speechSynthesis.speak(utterance);
+      
+      utterance.lang = 'en-US';
+      utterance.rate = 1.0;
+      utterance.pitch = 1.2;
+      
+      utterance.onstart = () => {
+        console.log('Started speaking');
+        showSpeechStatus(true);
+        speechWasInterrupted = false;
+      };
+      
+      utterance.onend = () => {
+        console.log('Finished speaking');
+        showSpeechStatus(false);
+        if (!speechWasInterrupted) {
+          console.log('Speech completed normally');
+        }
+      };
+      
+      utterance.onerror = (err) => {
+        console.error('Speech synthesis error:', err);
+        showSpeechStatus(false);
+      };
+      
+      window.speechSynthesis.speak(utterance);
   }
-  
+/**
+ * Listen to Dialogflow response events and process AI messages, with special handling for the first response. 
+ */  
   const dfMessenger = document.querySelector('df-messenger');
   dfMessenger.addEventListener('df-response-received', (event) => {
-    console.log(`Response received (isFirstResponse=${isFirstResponse}):`, 
-      event.detail.raw.queryResult.diagnosticInfo);
-    
-    const responseData = event.detail;
-    if (responseData.messages && responseData.messages.length > 0) {
-      console.log('Message:', responseData.messages[0].text);
-      AIMessage = responseData.messages[0].text;
+      console.log(`Response received (isFirstResponse=${isFirstResponse}):`, 
+        event.detail.raw.queryResult.diagnosticInfo);
       
-      if (isFirstResponse) {
-        isFirstResponse = false;
-        console.log('Processing first response with special handling');
+      const responseData = event.detail;
+      if (responseData.messages && responseData.messages.length > 0) {
+        console.log('Message:', responseData.messages[0].text);
+        AIMessage = responseData.messages[0].text;
         
-        if (!voicesLoaded) {
-          loadVoices();
-          setTimeout(() => {
+        if (isFirstResponse) {
+          isFirstResponse = false;
+          console.log('Processing first response with special handling');
+          
+          if (!voicesLoaded) {
+            loadVoices();
+            setTimeout(() => {
+              speakText(AIMessage);
+            }, 300);
+          } else {
             speakText(AIMessage);
-          }, 300);
+          }
         } else {
           speakText(AIMessage);
         }
-      } else {
-        speakText(AIMessage);
       }
-    }
-    
-    if (FlagWelcome === 0 && window.userInfo) {
-      FlagWelcome = 1;
-      setUserInformation();
-    }
+      
+      if (FlagWelcome === 0 && window.userInfo) {
+        FlagWelcome = 1;
+        setUserInformation();
+      }
   });
-  
+/**
+ * @function setUserInformation
+ * @description Sets user information parameters for Dialogflow
+ * 
+ */  
   function setUserInformation() {
     const dfMessenger = document.querySelector('df-messenger');
     console.log("Setting user parameters");
@@ -668,13 +773,19 @@
       FlagWelcome = 2;
     }
   }
-  
+/**
+ * @function funsetQueryParameters
+ * @description Sets query parameters for Dialogflow with feedback data For analytics and Improvements.
+ * @param {Array} feedbackTextsList - List of feedback text submitted by users
+ * @param {Array} selectedOptionsList - List of feedback options selected by users
+ */  
   function funsetQueryParameters(feedbackTextsList, selectedOptionsList) {
     const dfMessenger = document.querySelector('df-messenger');
     const queryParameters = {
       parameters: {
         feedbackTextsList: feedbackTextsList,
-        selectedOptionsList: selectedOptionsList
+        selectedOptionsList: selectedOptionsList,
+        feedbackAITextList: feedbackAITextList
       }
     };
     dfMessenger.setQueryParameters(queryParameters);  
