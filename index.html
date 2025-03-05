@@ -5,6 +5,33 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
+   <!-- Add this right after the opening <body> tag -->
+  <div id="modal-overlay" class="modal-overlay">
+    <div class="modal-content">
+      <h2>Welcome to DISH Agent</h2>
+      <p>Please enter your information to continue</p>
+      
+      <form id="user-info-form">
+        <div class="form-group">
+          <label for="firstName">First Name</label>
+          <input type="text" id="firstName" name="firstName" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="position">Applicant Position</label>
+          <input type="text" id="position" name="position" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="lastJob">Last Job Company</label>
+          <input type="text" id="lastJob" name="lastJob" required>
+        </div>
+        
+        <button type="submit" class="submit-btn">Start Conversation</button>
+      </form>
+    </div>
+  </div>
+   <!--End of Popup  -->
     <link rel="stylesheet" href="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/themes/df-messenger-default.css">
     <script src="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js"></script>
     <df-messenger
@@ -14,7 +41,6 @@
       max-query-length="-1"
       allow-feedback="all"
       intent="WELCOME"
-      allow-feedback="all"
       >
       <df-messenger-chat
        chat-title="Hybrid DISH Agent"
@@ -24,6 +50,7 @@
     <button id="start-voice-input" class="voice-button">
       <i class="fas fa-microphone"></i>
     </button>
+    <div id="speech-status" style="position: fixed; bottom: 115px; right: 20px; color: #007bff; font-weight: bold; background-color: rgba(255,255,255,0.8); padding: 5px 10px; border-radius: 5px; display: none;"></div>
     <div id="error-message" style="position: fixed; bottom: 85px; right: 20px; color: red;"></div>
     <style>
       df-messenger {
@@ -120,43 +147,198 @@
         border-color: #007bff;
         outline: none;
       }
+      /* Speech Status indicator */
+      #speech-status {
+        transition: opacity 0.3s ease;
+        opacity: 0.9;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      }
+      
+      @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+      }
+      
+      #speech-status.listening {
+        animation: blink 1.5s infinite;
+      }
+      /* Modal overlay styles */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+      
+      .modal-content {
+        background-color: white;
+        padding: 30px;
+        border-radius: 10px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      }
+      
+      .modal-content h2 {
+        margin-top: 0;
+        color: #007bff;
+      }
+      
+      .form-group {
+        margin-bottom: 20px;
+      }
+      
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      
+      .form-group input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+      }
+      
+      .submit-btn {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        width: 100%;
+      }
+      
+      .submit-btn:hover {
+        background-color: #0056b3;
+      }
+      
+      /* Blur effect class */
+      .blur-background {
+        filter: blur(5px);
+      }
     </style>
-    <script>
+<!--  -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Apply blur to background elements
+      const dfMessenger = document.querySelector('df-messenger');
+      const voiceButton = document.getElementById('start-voice-input');
+      
+      dfMessenger.classList.add('blur-background');
+      voiceButton.classList.add('blur-background');
+      
+      // Handle form submission
+      const userInfoForm = document.getElementById('user-info-form');
+      userInfoForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        // Get form values
+        const firstName = document.getElementById('firstName').value.trim();
+        const position = document.getElementById('position').value.trim();
+        const lastJob = document.getElementById('lastJob').value.trim();
+        
+        // Validate inputs
+        if (!firstName || !position || !lastJob) {
+          alert('Please fill in all fields');
+          return;
+        }
+        
+        // Store values in global variables to be used by setUserInformation
+        window.userInfo = {
+          firstName: firstName,
+          position: position,
+          lastJob: lastJob
+        };
+        
+        // Remove blur effect
+        dfMessenger.classList.remove('blur-background');
+        voiceButton.classList.remove('blur-background');
+        
+        // Hide modal
+        document.getElementById('modal-overlay').style.display = 'none';
+        
+        // Initialize the chatbot with user info
+        initializeAgent();
+      });
+    });
+    
+    function initializeAgent() {
+      // This function will be called after form submission
+      // It will replace the immediate setUserInformation call
+      setUserInformation();
+    }
+  </script>
+<!-- //  -->
+<script>
       const startVoiceInputButton = document.getElementById('start-voice-input');
+      const speechStatus = document.getElementById('speech-status');
       const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
       recognition.lang = 'en-US';
       recognition.interimResults = false;
       recognition.maxAlternatives = 1;
       let isRecognitionActive = false;
-    
+      
       startVoiceInputButton.addEventListener('click', () => {
         if (!isRecognitionActive) {
           startVoiceInputButton.innerHTML = '<i class="fas fa-stop"></i>';
           startVoiceInputButton.classList.add('listening');
+          
+          // Show listening status with animation
+          speechStatus.textContent = "Listening...";
+          speechStatus.classList.add('listening');
+          speechStatus.style.display = "block";
+          
           recognition.start();
           isRecognitionActive = true;
         }
       });
-    
+      
       recognition.addEventListener('result', (event) => {
+        // Update status to show processing
+        speechStatus.textContent = "Processing transcript...";
+        speechStatus.classList.remove('listening');
+        
         const transcript = event.results[0][0].transcript;
         const dfMessenger = document.querySelector('df-messenger');
         dfMessenger.renderCustomText(transcript, false);
         dfMessenger.sendRequest('query', transcript);
+        
+        // Hide status after sending to chatbot
+        setTimeout(() => {
+          speechStatus.style.display = "none";
+        }, 1000);
       });
-    
+      
       recognition.addEventListener('end', () => {
         if (isRecognitionActive) {
           recognition.stop();
           isRecognitionActive = false;
           startVoiceInputButton.innerHTML = '<i class="fas fa-microphone"></i>';
           startVoiceInputButton.classList.remove('listening');
+          
+          // Hide status if it's still showing
+          speechStatus.style.display = "none";
         }
       });
-    
+      
       recognition.addEventListener('error', (event) => {
         console.error('Speech recognition error detected: ' + event.error);
         const errorMessage = document.getElementById('error-message');
+        
+        // Hide status on error
+        speechStatus.style.display = "none";
+        
         switch (event.error) {
           case 'no-speech':
             errorMessage.textContent = 'No speech detected.';
@@ -172,14 +354,13 @@
         }
         startVoiceInputButton.classList.remove('listening');
       });
-    </script>
-<!--  -->
 
+</script>
+<!--  -->
 <script>
   // Global arrays to store feedback text and selected options
   const feedbackTextsList = [];
   const selectedOptionsList = [];
-
   class CustomFeedbackElement extends HTMLElement {
     constructor() {
       super();
@@ -259,31 +440,176 @@
     // Feedback submitted: {"feedback":"","selectedOptions":["Unhelpful"]}
     //Access the feedback and selected options
     const feedback = JSON.parse(event.detail);
-    setQueryParameters(feedback.feedback, feedback.selectedOptions);
+    funsetQueryParameters(feedback.feedback, feedback.selectedOptions);
   });
-
-  
 </script>
+<!--  -->
 <script>
-  // Listen to response received event to keep track of the session
+  // Initialize voices array and tracking variables
+  let speechSynthesisVoices = [];
+  let voicesLoaded = false;
+  let isFirstResponse = true;
+  let FlagWelcome = 0;
+  let AIMessage = '';
+  
+  // Enhanced function to load and cache voices
+  function loadVoices() {
+    console.log('Loading voices...');
+    speechSynthesisVoices = window.speechSynthesis.getVoices();
+    voicesLoaded = speechSynthesisVoices.length > 0;
+    console.log(`${speechSynthesisVoices.length} voices loaded, voicesLoaded=${voicesLoaded}`);
+    return voicesLoaded;
+  }
+  
+  // Load voices on page load
+  loadVoices();
+  
+  // Set up event handler for when voices are ready
+  if (window.speechSynthesis.onvoiceschanged !== undefined) {
+    window.speechSynthesis.onvoiceschanged = function() {
+      voicesLoaded = loadVoices();
+      console.log('Voices changed event triggered');
+    };
+  }
+
+  // Add this function to show a speech status indicator
+  function showSpeechStatus(isSpeaking) {
+    const speechStatus = document.getElementById('speech-status');
+    if (isSpeaking) {
+      speechStatus.textContent = "Speaking...";
+      speechStatus.style.display = "block";
+    } else {
+      speechStatus.style.display = "none";
+    }
+  }
+  
+  function speakText(text) {
+    if (!text || typeof text !== 'string') {
+      console.log('Invalid text to speak:', text);
+      return;
+    }
+    
+    console.log('Speaking:', text);
+    
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    // Use cached voices or get voices again
+    const voices = speechSynthesisVoices.length > 0 ? 
+      speechSynthesisVoices : window.speechSynthesis.getVoices();
+    
+    // Find Google US English voice
+    const selectedVoice = voices.find(voice => voice.name === 'Google US English');
+    console.log("Selected voice:", selectedVoice ? selectedVoice.name : "Voice not found");
+    
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    } else {
+      // Fallback to any US English voice if Google's isn't available
+      const fallbackVoice = voices.find(voice => voice.lang === 'en-US');
+      if (fallbackVoice) {
+        utterance.voice = fallbackVoice;
+        console.log("Using fallback voice:", fallbackVoice.name);
+      }
+    }
+    
+    utterance.lang = 'en-US';
+    utterance.rate = 1.0;
+    utterance.pitch = 1.2;
+    
+    // Add event handlers to track speech progress AND update speech status indicator
+    utterance.onstart = () => {
+      console.log('Started speaking');
+      showSpeechStatus(true);
+    };
+    
+    utterance.onend = () => {
+      console.log('Finished speaking');
+      showSpeechStatus(false);
+    };
+    
+    utterance.onerror = (err) => {
+      console.error('Speech synthesis error:', err);
+      showSpeechStatus(false);
+    };
+    
+    window.speechSynthesis.speak(utterance);
+  }
+  
   const dfMessenger = document.querySelector('df-messenger');
-  var sessionId = "";
-  var AIMessage = "";
   dfMessenger.addEventListener('df-response-received', (event) => {
-    console.log('Response received:', event.detail.raw.queryResult.diagnosticInfo);
+    console.log(`Response received (isFirstResponse=${isFirstResponse}):`, 
+      event.detail.raw.queryResult.diagnosticInfo);
+    
     // Handle response data
     const responseData = event.detail;
-    // Log the message
+    
+    // Process the message with highest priority
     if (responseData.messages && responseData.messages.length > 0) {
       console.log('Message:', responseData.messages[0].text);
       AIMessage = responseData.messages[0].text;
+      
+      if (isFirstResponse) {
+        isFirstResponse = false;
+        console.log('Processing first response with special handling');
+        
+        // For the first response, ensure voices are loaded with a small delay
+        if (!voicesLoaded) {
+          loadVoices();
+          setTimeout(() => {
+            speakText(AIMessage);
+          }, 300);  // Extra delay for first response
+        } else {
+          speakText(AIMessage);
+        }
+      } else {
+        // Normal processing for subsequent responses
+        speakText(AIMessage);
       }
+    }
+    
+    // Handle initialization (if needed)
+    if (FlagWelcome === 0 && window.userInfo) {
+      FlagWelcome = 1;  // Set flag immediately to prevent race conditions
+      setUserInformation();
+    }
   });
-
-
-  // 
-  function setQueryParameters(feedbackTextsList, selectedOptionsList) {
-
+  
+  function setUserInformation() {
+    const dfMessenger = document.querySelector('df-messenger');
+    console.log("Setting user parameters");
+    
+    // Get user info from the form (or use defaults if somehow missing)
+    const userInfo = window.userInfo || {
+      firstName: "Guest",
+      position: "Visitor",
+      lastJob: "Unknown"
+    };
+    
+    const queryParameters = {
+      parameters: {
+        job_applicant_first_name: userInfo.firstName,
+        job_applicant_position: userInfo.position,
+        job_applicant_last_Job: userInfo.lastJob,
+      }
+    };
+    
+    dfMessenger.setQueryParameters(queryParameters);
+    console.log("Parameters set successfully:", userInfo);
+    console.log("Flag", FlagWelcome);
+    if (FlagWelcome === 0) 
+    {
+      // Send a welcome message after setting user parameters
+      // This is to ensure the welcome message is personalized
+      console.log("Sending welcome message");
+      dfMessenger.sendRequest('query', 'Hello');
+      FlagWelcome = 2;
+    }
+  }
+  
+  function funsetQueryParameters(feedbackTextsList, selectedOptionsList) {
     const dfMessenger = document.querySelector('df-messenger');
     const queryParameters = {
       parameters: {
