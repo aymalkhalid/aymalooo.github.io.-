@@ -51,6 +51,8 @@
       <i class="fas fa-microphone"></i>
     </button>
     <div id="speech-status" style="position: fixed; bottom: 115px; right: 20px; color: #007bff; font-weight: bold; background-color: rgba(255,255,255,0.8); padding: 5px 10px; border-radius: 5px; display: none;"></div>
+        <!-- Add this new element right after the speech-status div -->
+    <div id="transcription-display" style="position: fixed; bottom: 100px; left: 20px; color: #333; font-weight: bold; background-color: rgba(255,255,255,0.95); padding: 12px 15px; border-radius: 8px; max-width: 80%; width: 400px; text-align: left; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-left: 4px solid #007bff; z-index: 1100; display: none; transition: all 0.3s ease;"></div>
     <div id="error-message" style="position: fixed; bottom: 85px; right: 20px; color: red;"></div>
     <style>
       df-messenger {
@@ -281,80 +283,158 @@
   </script>
 <!-- //  -->
 <script>
-      const startVoiceInputButton = document.getElementById('start-voice-input');
-      const speechStatus = document.getElementById('speech-status');
-      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-      recognition.lang = 'en-US';
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
-      let isRecognitionActive = false;
+  const startVoiceInputButton = document.getElementById('start-voice-input');
+  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  recognition.lang = 'en-US';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+  recognition.continuous = true;
+  let isRecognitionActive = false;
+  let currentTranscript = ''; // Store transcript while listening
+  let allTranscripts = []; // Keep all transcription segments
+  
+  function showListeningStatus(isListening) {
+    const speechStatus = document.getElementById('speech-status');
+    if (isListening) {
+      speechStatus.textContent = "Listening...";
+      speechStatus.style.display = "block";
+      speechStatus.classList.add('listening');
+    } else {
+      speechStatus.style.display = "none";
+      speechStatus.classList.remove('listening');
+    }
+  }
+  
+  startVoiceInputButton.addEventListener('click', () => {
+    if (!isRecognitionActive) {
+      // Start listening
+      currentTranscript = ''; // Clear any previous transcript
+      allTranscripts = []; // Reset the transcript segments array
+      startVoiceInputButton.innerHTML = '<i class="fas fa-stop"></i>';
+      startVoiceInputButton.classList.add('listening');
+      recognition.start();
+      isRecognitionActive = true;
+      showListeningStatus(true);
       
-      startVoiceInputButton.addEventListener('click', () => {
-        if (!isRecognitionActive) {
-          startVoiceInputButton.innerHTML = '<i class="fas fa-stop"></i>';
-          startVoiceInputButton.classList.add('listening');
-          
-          // Show listening status with animation
-          speechStatus.textContent = "Listening...";
-          speechStatus.classList.add('listening');
-          speechStatus.style.display = "block";
-          
-          recognition.start();
-          isRecognitionActive = true;
-        }
-      });
+      // Clear any previous transcription display but keep it visible with a placeholder
+      const transcriptionDisplay = document.getElementById('transcription-display');
+      transcriptionDisplay.innerHTML = '<i class="fas fa-comment-dots" style="margin-right: 8px; color: #007bff;"></i> <span style="color: #007bff;">Listening for speech...</span>';
+      transcriptionDisplay.style.display = 'block';
+    } else {
+      // Stop listening and send complete transcript
+      recognition.stop();
+      isRecognitionActive = false;
+      startVoiceInputButton.innerHTML = '<i class="fas fa-microphone"></i>';
+      startVoiceInputButton.classList.remove('listening');
+      showListeningStatus(false);
       
-      recognition.addEventListener('result', (event) => {
-        // Update status to show processing
-        speechStatus.textContent = "Processing transcript...";
-        speechStatus.classList.remove('listening');
-        
-        const transcript = event.results[0][0].transcript;
+      // Get the full transcript from all segments
+      const fullTranscript = allTranscripts.join(' ').trim();
+      
+      // Only send transcript when stopping if we have content
+      if (fullTranscript) {
         const dfMessenger = document.querySelector('df-messenger');
-        dfMessenger.renderCustomText(transcript, false);
-        dfMessenger.sendRequest('query', transcript);
-        
-        // Hide status after sending to chatbot
-        setTimeout(() => {
-          speechStatus.style.display = "none";
-        }, 1000);
-      });
+        dfMessenger.renderCustomText(fullTranscript, false);
+        dfMessenger.sendRequest('query', fullTranscript);
+        console.log("Sending transcript to Dialogflow:", fullTranscript);
+      }
       
-      recognition.addEventListener('end', () => {
-        if (isRecognitionActive) {
-          recognition.stop();
+      // Reset transcripts
+      currentTranscript = '';
+      allTranscripts = [];
+      
+      // Clear and hide the transcription display
+      const transcriptionDisplay = document.getElementById('transcription-display');
+      transcriptionDisplay.innerHTML = '';
+      transcriptionDisplay.style.display = 'none';
+    }
+  });
+
+  // Collect transcripts while listening, don't send them
+  // Collect transcripts while listening, don't send them
+  // Collect transcripts while listening, don't send them
+  recognition.addEventListener('result', (event) => {
+    const latestTranscript = event.results[event.results.length - 1][0].transcript;
+    currentTranscript = latestTranscript; // Store latest transcript
+    
+    // Add to our collection of transcript segments
+    allTranscripts.push(latestTranscript);
+    
+    // Show what's being transcribed without sending to agent
+    const transcriptionDisplay = document.getElementById('transcription-display');
+    
+    // Create formatted content with icon
+    transcriptionDisplay.innerHTML = `<i class="fas fa-comment-dots" style="margin-right: 8px; color: #007bff;"></i> 
+                                    <span style="color: #007bff;">Transcribing:</span> 
+                                    <span style="font-weight: normal;">${currentTranscript}</span>`;
+    
+    // Make sure it's visible
+    transcriptionDisplay.style.display = 'block';
+    
+    console.log("Added transcript segment:", latestTranscript);
+  });
+
+  recognition.addEventListener('end', () => {
+    if (isRecognitionActive) {
+      // Immediately restart recognition to maintain continuous listening
+      setTimeout(() => {
+        try {
+          recognition.start();
+          console.log('Speech recognition restarted');
+        } catch (error) {
+          console.error('Error restarting speech recognition:', error);
           isRecognitionActive = false;
           startVoiceInputButton.innerHTML = '<i class="fas fa-microphone"></i>';
           startVoiceInputButton.classList.remove('listening');
-          
-          // Hide status if it's still showing
-          speechStatus.style.display = "none";
+          showListeningStatus(false);
         }
-      });
-      
-      recognition.addEventListener('error', (event) => {
-        console.error('Speech recognition error detected: ' + event.error);
-        const errorMessage = document.getElementById('error-message');
-        
-        // Hide status on error
-        speechStatus.style.display = "none";
-        
-        switch (event.error) {
-          case 'no-speech':
-            errorMessage.textContent = 'No speech detected.';
-            break;
-          case 'audio-capture':
-            errorMessage.textContent = 'Microphone access denied or not available.';
-            break;
-          case 'not-allowed':
-            errorMessage.textContent = 'Permission to use the microphone was denied.';
-            break;
-          default:
-            errorMessage.textContent = 'An error occurred during speech recognition.';
-        }
-        startVoiceInputButton.classList.remove('listening');
-      });
+      }, 10);
+    }
+  });
 
+  recognition.addEventListener('error', (event) => {
+    console.error('Speech recognition error detected: ' + event.error);
+    const errorMessage = document.getElementById('error-message');
+    
+    // Don't stop listening for common errors
+    switch (event.error) {
+      case 'no-speech':
+        errorMessage.textContent = 'No speech detected.';
+        break;
+      case 'audio-capture':
+        errorMessage.textContent = 'Microphone access denied or not available.';
+        stopRecognition();
+        break;
+      case 'not-allowed':
+        errorMessage.textContent = 'Permission to use the microphone was denied.';
+        stopRecognition();
+        break;
+      default:
+        errorMessage.textContent = 'An error occurred during speech recognition.';
+        if (event.error !== 'aborted') {
+          stopRecognition();
+        }
+    }
+    
+    // Clear error message after 3 seconds only for errors, not for transcription display
+    if (event.error) {
+      setTimeout(() => {
+        if (errorMessage.textContent.startsWith('Transcribing:') === false) {
+          errorMessage.textContent = '';
+          errorMessage.style.color = 'red'; // Reset to error color
+        }
+      }, 3000);
+    }
+  });
+  
+  function stopRecognition() {
+    isRecognitionActive = false;
+    startVoiceInputButton.innerHTML = '<i class="fas fa-microphone"></i>';
+    startVoiceInputButton.classList.remove('listening');
+    showListeningStatus(false);
+    currentTranscript = ''; // Clear transcript when stopping
+    allTranscripts = []; // Clear all transcript segments
+  }
 </script>
 <!--  -->
 <script>
