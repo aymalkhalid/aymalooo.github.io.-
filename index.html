@@ -51,7 +51,6 @@
       <i class="fas fa-microphone"></i>
     </button>
     <div id="speech-status" style="position: fixed; bottom: 115px; right: 20px; color: #007bff; font-weight: bold; background-color: rgba(255,255,255,0.8); padding: 5px 10px; border-radius: 5px; display: none;"></div>
-        <!-- Add this new element right after the speech-status div -->
     <div id="transcription-display" style="position: fixed; bottom: 100px; left: 20px; color: #333; font-weight: bold; background-color: rgba(255,255,255,0.95); padding: 12px 15px; border-radius: 8px; max-width: 80%; width: 400px; text-align: left; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-left: 4px solid #007bff; z-index: 1100; display: none; transition: all 0.3s ease;"></div>
     <div id="error-message" style="position: fixed; bottom: 85px; right: 20px; color: red;"></div>
     <style>
@@ -149,22 +148,18 @@
         border-color: #007bff;
         outline: none;
       }
-      /* Speech Status indicator */
       #speech-status {
         transition: opacity 0.3s ease;
         opacity: 0.9;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
       }
-      
       @keyframes blink {
         0%, 100% { opacity: 1; }
         50% { opacity: 0.5; }
       }
-      
       #speech-status.listening {
         animation: blink 1.5s infinite;
       }
-      /* Modal overlay styles */
       .modal-overlay {
         position: fixed;
         top: 0;
@@ -177,7 +172,6 @@
         align-items: center;
         z-index: 1000;
       }
-      
       .modal-content {
         background-color: white;
         padding: 30px;
@@ -186,22 +180,18 @@
         width: 90%;
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
       }
-      
       .modal-content h2 {
         margin-top: 0;
         color: #007bff;
       }
-      
       .form-group {
         margin-bottom: 20px;
       }
-      
       .form-group label {
         display: block;
         margin-bottom: 5px;
         font-weight: bold;
       }
-      
       .form-group input {
         width: 100%;
         padding: 10px;
@@ -209,7 +199,6 @@
         border-radius: 5px;
         font-size: 16px;
       }
-      
       .submit-btn {
         background-color: #007bff;
         color: white;
@@ -220,14 +209,12 @@
         cursor: pointer;
         width: 100%;
       }
-      
       .submit-btn:hover {
         background-color: #0056b3;
       }
-      
-      /* Blur effect class */
-      .blur-background {
-        filter: blur(5px);
+      .voice-button.ready-to-send {
+        box-shadow: 0 0 15px rgba(255, 0, 0, 0.7);
+        transform: scale(1.1);
       }
     </style>
 <!--  -->
@@ -276,8 +263,6 @@
     });
     
     function initializeAgent() {
-      // This function will be called after form submission
-      // It will replace the immediate setUserInformation call
       setUserInformation();
     }
   </script>
@@ -289,9 +274,11 @@
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
   recognition.continuous = true;
+  
   let isRecognitionActive = false;
-  let currentTranscript = ''; // Store transcript while listening
-  let allTranscripts = []; // Keep all transcription segments
+  let currentTranscript = '';
+  let allTranscripts = [];
+  let speechWasInterrupted = false;
   
   function showListeningStatus(isListening) {
     const speechStatus = document.getElementById('speech-status');
@@ -307,76 +294,76 @@
   
   startVoiceInputButton.addEventListener('click', () => {
     if (!isRecognitionActive) {
-      // Start listening
-      currentTranscript = ''; // Clear any previous transcript
-      allTranscripts = []; // Reset the transcript segments array
+      if (window.speechSynthesis.speaking) {
+        speechWasInterrupted = true;
+        console.log('Speech interrupted by user');
+      }
+      window.speechSynthesis.cancel();
+      
+      currentTranscript = '';
+      allTranscripts = [];
       startVoiceInputButton.innerHTML = '<i class="fas fa-stop"></i>';
       startVoiceInputButton.classList.add('listening');
+      startVoiceInputButton.setAttribute('title', 'Click to stop and send transcript');
       recognition.start();
       isRecognitionActive = true;
       showListeningStatus(true);
       
-      // Clear any previous transcription display but keep it visible with a placeholder
       const transcriptionDisplay = document.getElementById('transcription-display');
       transcriptionDisplay.innerHTML = '<i class="fas fa-comment-dots" style="margin-right: 8px; color: #007bff;"></i> <span style="color: #007bff;">Listening for speech...</span>';
       transcriptionDisplay.style.display = 'block';
     } else {
-      // Stop listening and send complete transcript
       recognition.stop();
       isRecognitionActive = false;
       startVoiceInputButton.innerHTML = '<i class="fas fa-microphone"></i>';
-      startVoiceInputButton.classList.remove('listening');
+      startVoiceInputButton.classList.remove('listening', 'ready-to-send');
+      startVoiceInputButton.setAttribute('title', 'Click to start speaking');
       showListeningStatus(false);
-      
-      // Get the full transcript from all segments
-      const fullTranscript = allTranscripts.join(' ').trim();
-      
-      // Only send transcript when stopping if we have content
-      if (fullTranscript) {
-        const dfMessenger = document.querySelector('df-messenger');
-        dfMessenger.renderCustomText(fullTranscript, false);
-        dfMessenger.sendRequest('query', fullTranscript);
-        console.log("Sending transcript to Dialogflow:", fullTranscript);
-      }
-      
-      // Reset transcripts
-      currentTranscript = '';
-      allTranscripts = [];
-      
-      // Clear and hide the transcription display
-      const transcriptionDisplay = document.getElementById('transcription-display');
-      transcriptionDisplay.innerHTML = '';
-      transcriptionDisplay.style.display = 'none';
+      console.log('Stop requested');
     }
   });
 
-  // Collect transcripts while listening, don't send them
-  // Collect transcripts while listening, don't send them
-  // Collect transcripts while listening, don't send them
-  recognition.addEventListener('result', (event) => {
-    const latestTranscript = event.results[event.results.length - 1][0].transcript;
-    currentTranscript = latestTranscript; // Store latest transcript
-    
-    // Add to our collection of transcript segments
-    allTranscripts.push(latestTranscript);
-    
-    // Show what's being transcribed without sending to agent
-    const transcriptionDisplay = document.getElementById('transcription-display');
-    
-    // Create formatted content with icon
-    transcriptionDisplay.innerHTML = `<i class="fas fa-comment-dots" style="margin-right: 8px; color: #007bff;"></i> 
-                                    <span style="color: #007bff;">Transcribing:</span> 
-                                    <span style="font-weight: normal;">${currentTranscript}</span>`;
-    
-    // Make sure it's visible
-    transcriptionDisplay.style.display = 'block';
-    
-    console.log("Added transcript segment:", latestTranscript);
-  });
-
+  // This function finalizes transcript in the end event
   recognition.addEventListener('end', () => {
-    if (isRecognitionActive) {
-      // Immediately restart recognition to maintain continuous listening
+    if (!isRecognitionActive) {
+      // The user pressed stop, so finalize & send
+      console.log("Transcript segments before sending:", JSON.stringify(allTranscripts));
+      let fullTranscript = allTranscripts.length ? allTranscripts.join(' ').trim() : '';
+      console.log("Combined transcript to send:", fullTranscript);
+      
+      const transcriptionDisplay = document.getElementById('transcription-display');
+      if (fullTranscript) {
+        transcriptionDisplay.innerHTML = `<i class="fas fa-paper-plane" style="margin-right: 8px; color: #28a745;"></i>
+          <span style="color: #28a745;">Sending:</span> 
+          <span style="font-weight: normal;">${fullTranscript}</span>`;
+        transcriptionDisplay.style.display = 'block';
+        
+        const dfMessenger = document.querySelector('df-messenger');
+        try {
+          dfMessenger.renderCustomText(fullTranscript, false);
+          setTimeout(() => {
+            dfMessenger.sendRequest('query', fullTranscript);
+            console.log("✅ Transcript successfully sent to Dialogflow");
+          }, 100);
+        } catch (error) {
+          console.error("Error sending transcript:", error);
+        }
+        
+        setTimeout(() => {
+          transcriptionDisplay.style.display = 'none';
+        }, 1500);
+      } else {
+        console.log("⚠️ No transcript content to send");
+        transcriptionDisplay.innerHTML = `<i class="fas fa-exclamation-triangle" style="margin-right: 8px; color: #ffc107;"></i>
+          <span style="color: #ffc107;">No speech detected</span>`;
+        setTimeout(() => {
+          transcriptionDisplay.style.display = 'none';
+        }, 1500);
+      }
+      currentTranscript = '';
+      allTranscripts = [];
+    } else {
+      // If still active, user wants continuous listening
       setTimeout(() => {
         try {
           recognition.start();
@@ -392,11 +379,31 @@
     }
   });
 
+  recognition.addEventListener('result', (event) => {
+    console.log("Speech recognition result:", event.results);
+    
+    const latestTranscript = event.results[event.results.length - 1][0].transcript;
+    currentTranscript = latestTranscript;
+    allTranscripts.push(latestTranscript);
+    console.log("Current transcript segments:", allTranscripts);
+    
+    const transcriptionDisplay = document.getElementById('transcription-display');
+    transcriptionDisplay.innerHTML = `
+      <i class="fas fa-comment-dots" style="margin-right: 8px; color: #007bff;"></i> 
+      <span style="color: #007bff;">Transcribing:</span> 
+      <span style="font-weight: normal;">${latestTranscript}</span>
+      <div style="margin-top: 8px; font-size: 12px; color: #666; text-align: right;">
+        <i class="fas fa-info-circle"></i> Click <i class="fas fa-stop" style="color: #ff0000;"></i> to send
+      </div>
+    `;
+    transcriptionDisplay.style.display = 'block';
+    startVoiceInputButton.classList.add('ready-to-send');
+  });
+
   recognition.addEventListener('error', (event) => {
     console.error('Speech recognition error detected: ' + event.error);
     const errorMessage = document.getElementById('error-message');
     
-    // Don't stop listening for common errors
     switch (event.error) {
       case 'no-speech':
         errorMessage.textContent = 'No speech detected.';
@@ -416,12 +423,12 @@
         }
     }
     
-    // Clear error message after 3 seconds only for errors, not for transcription display
+    // Clear error message after a timeout
     if (event.error) {
       setTimeout(() => {
-        if (errorMessage.textContent.startsWith('Transcribing:') === false) {
+        if (!errorMessage.textContent.startsWith('Transcribing:')) {
           errorMessage.textContent = '';
-          errorMessage.style.color = 'red'; // Reset to error color
+          errorMessage.style.color = 'red'; 
         }
       }, 3000);
     }
@@ -432,8 +439,8 @@
     startVoiceInputButton.innerHTML = '<i class="fas fa-microphone"></i>';
     startVoiceInputButton.classList.remove('listening');
     showListeningStatus(false);
-    currentTranscript = ''; // Clear transcript when stopping
-    allTranscripts = []; // Clear all transcript segments
+    currentTranscript = '';
+    allTranscripts = [];
   }
 </script>
 <!--  -->
@@ -451,9 +458,9 @@
       const wrapper = document.createElement('div');
       wrapper.classList.add('feedback-wrapper');
 
-      // Create feedback options
       const options = [
-        "Inaccurate", "Partially Accurate", "Unhelpful", "Context Lost", "Unnatural Language", "Repetitive", "Edge Case Failure", "Human Escalation Needed"
+        "Inaccurate", "Partially Accurate", "Unhelpful", "Context Lost", 
+        "Unnatural Language", "Repetitive", "Edge Case Failure", "Human Escalation Needed"
       ];
 
       options.forEach(option => {
@@ -466,8 +473,6 @@
         wrapper.appendChild(label);
       });
 
-      // Create text area for manual feedback
-      // Add a Break
       wrapper.appendChild(document.createElement('br'));
       wrapper.appendChild(document.createElement('br'));
       const textArea = document.createElement('textarea');
@@ -478,7 +483,6 @@
       textArea.id = 'feedback-text';
       wrapper.appendChild(textArea);
 
-      // Create submit button
       const button = document.createElement('button');
       button.innerText = 'Submit';
       button.addEventListener('click', () => {
@@ -496,7 +500,6 @@
         .filter(checkbox => checkbox.checked)
         .map(checkbox => checkbox.value);
       
-      // Append feedback to global arrays
       feedbackTextsList.push(feedbackText);
       selectedOptionsList.push(selectedOptions);
 
@@ -514,25 +517,20 @@
 
   (function() {customElements.define('df-external-custom-feedback', CustomFeedbackElement);})();
 
-  // Add event listener to log feedback to console
   document.addEventListener('df-custom-submit-feedback-clicked', (event) => {
     console.log('Feedback submitted:', event.detail); 
-    // Feedback submitted: {"feedback":"","selectedOptions":["Unhelpful"]}
-    //Access the feedback and selected options
     const feedback = JSON.parse(event.detail);
     funsetQueryParameters(feedback.feedback, feedback.selectedOptions);
   });
 </script>
 <!--  -->
 <script>
-  // Initialize voices array and tracking variables
   let speechSynthesisVoices = [];
   let voicesLoaded = false;
   let isFirstResponse = true;
   let FlagWelcome = 0;
   let AIMessage = '';
   
-  // Enhanced function to load and cache voices
   function loadVoices() {
     console.log('Loading voices...');
     speechSynthesisVoices = window.speechSynthesis.getVoices();
@@ -541,10 +539,8 @@
     return voicesLoaded;
   }
   
-  // Load voices on page load
   loadVoices();
   
-  // Set up event handler for when voices are ready
   if (window.speechSynthesis.onvoiceschanged !== undefined) {
     window.speechSynthesis.onvoiceschanged = function() {
       voicesLoaded = loadVoices();
@@ -552,7 +548,6 @@
     };
   }
 
-  // Add this function to show a speech status indicator
   function showSpeechStatus(isSpeaking) {
     const speechStatus = document.getElementById('speech-status');
     if (isSpeaking) {
@@ -568,26 +563,18 @@
       console.log('Invalid text to speak:', text);
       return;
     }
-    
     console.log('Speaking:', text);
     
-    // Cancel any ongoing speech
     window.speechSynthesis.cancel();
-    
     const utterance = new SpeechSynthesisUtterance(text);
+    const voices = speechSynthesisVoices.length > 0 ? speechSynthesisVoices : window.speechSynthesis.getVoices();
     
-    // Use cached voices or get voices again
-    const voices = speechSynthesisVoices.length > 0 ? 
-      speechSynthesisVoices : window.speechSynthesis.getVoices();
-    
-    // Find Google US English voice
     const selectedVoice = voices.find(voice => voice.name === 'Google US English');
     console.log("Selected voice:", selectedVoice ? selectedVoice.name : "Voice not found");
     
     if (selectedVoice) {
       utterance.voice = selectedVoice;
     } else {
-      // Fallback to any US English voice if Google's isn't available
       const fallbackVoice = voices.find(voice => voice.lang === 'en-US');
       if (fallbackVoice) {
         utterance.voice = fallbackVoice;
@@ -599,15 +586,18 @@
     utterance.rate = 1.0;
     utterance.pitch = 1.2;
     
-    // Add event handlers to track speech progress AND update speech status indicator
     utterance.onstart = () => {
       console.log('Started speaking');
       showSpeechStatus(true);
+      speechWasInterrupted = false;
     };
     
     utterance.onend = () => {
       console.log('Finished speaking');
       showSpeechStatus(false);
+      if (!speechWasInterrupted) {
+        console.log('Speech completed normally');
+      }
     };
     
     utterance.onerror = (err) => {
@@ -623,10 +613,7 @@
     console.log(`Response received (isFirstResponse=${isFirstResponse}):`, 
       event.detail.raw.queryResult.diagnosticInfo);
     
-    // Handle response data
     const responseData = event.detail;
-    
-    // Process the message with highest priority
     if (responseData.messages && responseData.messages.length > 0) {
       console.log('Message:', responseData.messages[0].text);
       AIMessage = responseData.messages[0].text;
@@ -635,24 +622,21 @@
         isFirstResponse = false;
         console.log('Processing first response with special handling');
         
-        // For the first response, ensure voices are loaded with a small delay
         if (!voicesLoaded) {
           loadVoices();
           setTimeout(() => {
             speakText(AIMessage);
-          }, 300);  // Extra delay for first response
+          }, 300);
         } else {
           speakText(AIMessage);
         }
       } else {
-        // Normal processing for subsequent responses
         speakText(AIMessage);
       }
     }
     
-    // Handle initialization (if needed)
     if (FlagWelcome === 0 && window.userInfo) {
-      FlagWelcome = 1;  // Set flag immediately to prevent race conditions
+      FlagWelcome = 1;
       setUserInformation();
     }
   });
@@ -661,11 +645,10 @@
     const dfMessenger = document.querySelector('df-messenger');
     console.log("Setting user parameters");
     
-    // Get user info from the form (or use defaults if somehow missing)
     const userInfo = window.userInfo || {
-      firstName: "Guest",
-      position: "Visitor",
-      lastJob: "Unknown"
+      firstName: "Jonathan",
+      position: "Wireless Customer Service Agent",
+      lastJob: "Disney"
     };
     
     const queryParameters = {
@@ -679,10 +662,7 @@
     dfMessenger.setQueryParameters(queryParameters);
     console.log("Parameters set successfully:", userInfo);
     console.log("Flag", FlagWelcome);
-    if (FlagWelcome === 0) 
-    {
-      // Send a welcome message after setting user parameters
-      // This is to ensure the welcome message is personalized
+    if (FlagWelcome === 0) {
       console.log("Sending welcome message");
       dfMessenger.sendRequest('query', 'Hello');
       FlagWelcome = 2;
