@@ -3,6 +3,7 @@
 <head>
     <title>Home</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/elevenlabs-js@latest/dist/elevenlabs.min.js"></script>
 </head>
 <body>
    <!-- Add this right after the opening <body> tag -->
@@ -26,7 +27,13 @@
           <label for="lastJob">Last Job Company</label>
           <input type="text" id="lastJob" name="lastJob" required>
         </div>
-        
+        <!--  -->
+        <div class="form-group">
+          <label for="elevenLabsKey">ElevenLabs API Key</label>
+          <input type="password" id="elevenLabsKey" required>
+          <small>Get your key at <a href="https://elevenlabs.io/app" target="_blank">elevenlabs.io</a></small>
+        </div>
+
         <button type="submit" class="submit-btn">Start Conversation</button>
       </form>
     </div>
@@ -294,6 +301,19 @@
   
   startVoiceInputButton.addEventListener('click', () => {
     if (!isRecognitionActive) {
+    // Add this at the beginning of the if block
+    if (audioElement) {
+      audioElement.pause();
+      audioElement = null;
+      console.log('ElevenLabs audio playback interrupted');
+    }
+    
+    // Existing code continues...
+    if (window.speechSynthesis.speaking) {
+      speechWasInterrupted = true;
+      console.log('Speech interrupted by user');
+    }
+    window.speechSynthesis.cancel();
       if (window.speechSynthesis.speaking) {
         speechWasInterrupted = true;
         console.log('Speech interrupted by user');
@@ -651,62 +671,98 @@
       speechStatus.style.display = "none";
     }
   }
+
+// Add these global variables at the top of your script section with other globals
+// Remove these lines
+let audioElement = null;
+const ELEVEN_LABS_API_KEY = document.getElementById('elevenLabsKey').value; // API Key for ElevenLabs
+console.log('ElevenLabs API Key:', ELEVEN_LABS_API_KEY);
+const VOICE_ID = '9BWtsMINqrJLrRacOk9x'; // Voice ID for ElevenLabs API
+
+// Get the current API key from the input field
+function getElevenLabsApiKey() {
+  console.log('Getting ElevenLabs API Key:', document.getElementById('elevenLabsKey').value);
+  return document.getElementById('elevenLabsKey').value;
+}
+
 /**
  * @function speakText
- * @description Converts text to speech using the available voice
+ * @description Converts text to speech using ElevenLabs API
  * @param {string} text - Text to be spoken
- * 
  */
-  function speakText(text) 
-  {
-      if (!text || typeof text !== 'string') {
-        console.log('Invalid text to speak:', text);
-        return;
-      }
-      console.log('Speaking:', text);
-      
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      const voices = speechSynthesisVoices.length > 0 ? speechSynthesisVoices : window.speechSynthesis.getVoices();
-      
-      const selectedVoice = voices.find(voice => voice.name === 'Google US English');
-      console.log("Selected voice:", selectedVoice ? selectedVoice.name : "Voice not found");
-      
-      if (selectedVoice) {
-        utterance.voice = selectedVoice;
-      } else {
-        const fallbackVoice = voices.find(voice => voice.lang === 'en-US');
-        if (fallbackVoice) {
-          utterance.voice = fallbackVoice;
-          console.log("Using fallback voice:", fallbackVoice.name);
-        }
-      }
-      
-      utterance.lang = 'en-US';
-      utterance.rate = 1.0;
-      utterance.pitch = 1.2;
-      
-      utterance.onstart = () => {
-        console.log('Started speaking');
-        showSpeechStatus(true);
-        speechWasInterrupted = false;
-      };
-      
-      utterance.onend = () => {
-        console.log('Finished speaking');
-        showSpeechStatus(false);
-        if (!speechWasInterrupted) {
-          console.log('Speech completed normally');
-        }
-      };
-      
-      utterance.onerror = (err) => {
-        console.error('Speech synthesis error:', err);
-        showSpeechStatus(false);
-      };
-      
-      window.speechSynthesis.speak(utterance);
+async function speakText(text) {
+  if (!text || typeof text !== 'string') {
+    console.log('Invalid text to speak:', text);
+    return;
   }
+  
+  console.log('Speaking with ElevenLabs:', text);
+  
+  // Stop any current playback
+  if (audioElement) {
+    audioElement.pause();
+    audioElement = null;
+  }
+  
+  // Show speaking status
+  showSpeechStatus(true);
+  
+  try {
+    // Call ElevenLabs API
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'audio/mpeg',
+        'Content-Type': 'application/json',
+        'xi-api-key': getElevenLabsApiKey() 
+      },
+      body: JSON.stringify({
+        text: text,
+        model_id: 'eleven_monolingual_v1',
+        voice_settings: {
+          stability: 0.5,
+          similarity_boost: 0.5
+        }
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`ElevenLabs API error: ${response.status}`);
+    }
+    
+    // Get audio blob from response
+    const audioBlob = await response.blob();
+    const audioUrl = URL.createObjectURL(audioBlob);
+    
+    // Play the audio
+    audioElement = new Audio(audioUrl);
+    
+    audioElement.onended = () => {
+      console.log('Finished speaking');
+      showSpeechStatus(false);
+      URL.revokeObjectURL(audioUrl);
+    };
+    
+    audioElement.onerror = (err) => {
+      console.error('Audio playback error:', err);
+      showSpeechStatus(false);
+      URL.revokeObjectURL(audioUrl);
+    };
+    
+    await audioElement.play();
+    
+  } catch (error) {
+    console.error('ElevenLabs TTS error:', error);
+    showSpeechStatus(false);
+    
+    // Fallback to browser's speech synthesis if ElevenLabs fails
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = 1.0;
+    utterance.pitch = 1.2;
+    window.speechSynthesis.speak(utterance);
+  }
+}
 /**
  * Listen to Dialogflow response events and process AI messages, with special handling for the first response. 
  */  
