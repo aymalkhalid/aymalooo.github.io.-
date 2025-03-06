@@ -696,25 +696,31 @@ async function speakText(text) {
     return;
   }
   
-  console.log('Speaking with ElevenLabs:', text);
-  
-  // Stop any current playback
-  if (audioElement) {
-    audioElement.pause();
-    audioElement = null;
-  }
+  console.log('Speaking with ElevenLabs API (direct):', text);
   
   // Show speaking status
   showSpeechStatus(true);
   
   try {
-    // Call ElevenLabs API
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`, {
+    // Get the API key at the time of the request
+    const apiKey = getElevenLabsApiKey();
+    if (!apiKey) {
+      throw new Error('No ElevenLabs API key provided');
+    }
+    
+    // Stop any current playback
+    if (audioElement) {
+      audioElement.pause();
+      audioElement = null;
+    }
+    
+    // Call ElevenLabs streaming API
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}/stream`, {
       method: 'POST',
       headers: {
         'Accept': 'audio/mpeg',
         'Content-Type': 'application/json',
-        'xi-api-key': getElevenLabsApiKey() 
+        'xi-api-key': apiKey
       },
       body: JSON.stringify({
         text: text,
@@ -730,32 +736,29 @@ async function speakText(text) {
       throw new Error(`ElevenLabs API error: ${response.status}`);
     }
     
-    // Get audio blob from response
+    // Get audio data
     const audioBlob = await response.blob();
     const audioUrl = URL.createObjectURL(audioBlob);
     
-    // Play the audio
-    audioElement = new Audio(audioUrl);
-    
-    audioElement.onended = () => {
-      console.log('Finished speaking');
+    // Create audio element for playback
+    const audio = new Audio(audioUrl);
+    audio.onended = () => {
+      console.log('Finished playing audio');
       showSpeechStatus(false);
       URL.revokeObjectURL(audioUrl);
     };
     
-    audioElement.onerror = (err) => {
-      console.error('Audio playback error:', err);
-      showSpeechStatus(false);
-      URL.revokeObjectURL(audioUrl);
-    };
+    // Store reference to cancel if needed
+    audioElement = audio;
     
-    await audioElement.play();
+    // Start playback
+    audio.play();
     
   } catch (error) {
-    console.error('ElevenLabs TTS error:', error);
+    console.error('ElevenLabs API error:', error);
     showSpeechStatus(false);
     
-    // Fallback to browser's speech synthesis if ElevenLabs fails
+    // Fallback to browser's speech synthesis
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'en-US';
     utterance.rate = 1.0;
