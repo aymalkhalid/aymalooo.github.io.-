@@ -489,6 +489,7 @@
 .mic-warning .mic-button-inner {
   animation: warning-pulse 1s ease-in-out;
 }
+/* */
   /* Add to your existing styles */
   body {
     background: #f5f7fa;
@@ -527,7 +528,7 @@
   @keyframes move {
     from { background-position: 0 0; }
     to { background-position: 1000px 1000px; }
-  }        
+  }
 </style>
 <!--  -->
   <script>
@@ -614,6 +615,7 @@
   </script>
 <!-- //  -->
 
+
 <script>
   // Speech recognition setup
   const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
@@ -629,6 +631,7 @@
   let currentTranscript = '';
   let allTranscripts = [];
   let speechWasInterrupted = false;
+  let processedResults = new Set(); // Track processed result IDs to prevent duplicates
   
   /**
    * Shows or hides the listening status indicator
@@ -670,161 +673,148 @@
       }
     }
   }
+  
+  // REMOVE the duplicate event listeners and keep just one clean implementation
+  
+  // Clear all existing event listeners for speech recognition
+  recognition.onresult = null;
+  recognition.onend = null;
+  recognition.onerror = null;
+  
+  /**
+   * Handle speech recognition results with improved accuracy and deduplication
+   */
+  recognition.addEventListener('result', (event) => {
+    // Mark that speech was detected in this session
+    speechDetectedInSession = true;
+    
+    console.log("Speech recognition result:", event.results);
+    
+    const latestResult = event.results[event.results.length - 1];
+    const isFinal = latestResult.isFinal;
+    
+    // Find the alternative with highest confidence
+    let bestMatch = latestResult[0].transcript;
+    let highestConfidence = latestResult[0].confidence;
+    
+    // Check all alternatives for better accuracy
+    for (let i = 1; i < latestResult.length; i++) {
+      if (latestResult[i].confidence > highestConfidence) {
+        bestMatch = latestResult[i].transcript;
+        highestConfidence = latestResult[i].confidence;
+      }
+    }
+    
+    // Process final results only (when speech segment is complete)
+    if (isFinal) {
+      // Create a unique identifier for this result to prevent duplicates
+      const resultId = event.timeStamp + '-' + bestMatch.substring(0, 20);
+      
+      // Only add this segment if we haven't processed it before
+      if (!processedResults.has(resultId)) {
+        processedResults.add(resultId);
+        currentTranscript = bestMatch;
+        allTranscripts.push(bestMatch);
+        console.log("Final transcript segment:", bestMatch, "Confidence:", highestConfidence);
+      } else {
+        console.log("Duplicate transcript segment detected and skipped");
+      }
+    } else {
+      // For interim results, just log but don't add to transcript collection
+      console.log("Interim transcript:", bestMatch, "Confidence:", highestConfidence);
+    }
+  });
+
   /**
    * Handle the end of a recognition session
    */
-// Update the result event handler to track speech detection
-recognition.addEventListener('result', (event) => {
-  // Mark that speech was detected in this session
-  speechDetectedInSession = true;
-  
-  console.log("Speech recognition result:", event.results);
-  
-  const latestResult = event.results[event.results.length - 1];
-  const isFinal = latestResult.isFinal;
-  
-  // Find the alternative with highest confidence
-  let bestMatch = latestResult[0].transcript;
-  let highestConfidence = latestResult[0].confidence;
-  
-  // Check all alternatives for better accuracy
-  for (let i = 1; i < latestResult.length; i++) {
-    if (latestResult[i].confidence > highestConfidence) {
-      bestMatch = latestResult[i].transcript;
-      highestConfidence = latestResult[i].confidence;
-    }
-  }
-  
-  // Process final results only (when speech segment is complete)
-  if (isFinal) {
-    currentTranscript = bestMatch;
-    allTranscripts.push(bestMatch);
-    console.log("Final transcript segment:", bestMatch, "Confidence:", highestConfidence);
-  } else {
-    // For interim results, just log but don't add to transcript collection
-    console.log("Interim transcript:", bestMatch, "Confidence:", highestConfidence);
-  }
-});
-
-// Update the recognition.end event handler - only show warning when mic has stopped
-recognition.addEventListener('end', () => {
-  // Always clear the speech detection timer when recognition ends
-  clearTimeout(speechDetectionTimer);
-  
-  if (!isRecognitionActive) {
-    // Recognition ended because user stopped it
-    console.log("Transcript segments before sending:", JSON.stringify(allTranscripts));
-    let fullTranscript = allTranscripts.length ? allTranscripts.join(' ').trim() : '';
-    console.log("Combined transcript to send:", fullTranscript);
+  recognition.addEventListener('end', () => {
+    // Always clear the speech detection timer when recognition ends
+    clearTimeout(speechDetectionTimer);
     
-    if (fullTranscript) {
-      // Send the transcript to Dialogflow
-      const dfMessenger = document.querySelector('df-messenger');
-      if (dfMessenger) {
-        try {
-          // Add the user's message to the chat UI
-          dfMessenger.renderCustomText(fullTranscript, false);
-          
-          // Send the message to Dialogflow
-          setTimeout(() => {
-            dfMessenger.sendRequest('query', fullTranscript);
-            console.log("✅ Transcript successfully sent to Dialogflow");
-          }, 100);
-        } catch (error) {
-          console.error("Error sending transcript:", error);
-        }
-      }
-    } 
-    else if (!speechDetectedInSession) {
-      console.log("⚠️ No speech detected in session");
-      // Only show warning if no speech was detected in the entire session
-      showNoSpeechDetectedWarning();
-    }
-    
-    // Reset transcripts and speech detection flag
-    currentTranscript = '';
-    allTranscripts = [];
-    speechDetectedInSession = false;
-    
-    // Update UI using the new UI elements and structure
-    const micToggleButton = document.getElementById('mic-toggle-button');
-    const micStatusText = document.getElementById('mic-status-text');
-    
-    if (micToggleButton) {
-      micToggleButton.classList.remove('mic-active');
-      micToggleButton.classList.add('mic-inactive');
-    }
-    
-    if (micStatusText) {
-      micStatusText.textContent = 'Start Speaking';
-    }
-    
-    // Update recording status display
-    showListeningStatus(false);
-  } 
-      else {
-        // Recognition ended unexpectedly, restart it
-        setTimeout(() => {
+    if (!isRecognitionActive) {
+      // Recognition ended because user stopped it
+      console.log("Transcript segments before sending:", JSON.stringify(allTranscripts));
+      
+      // Deduplicate any remaining duplicates in the array
+      const uniqueTranscripts = [...new Set(allTranscripts)];
+      
+      let fullTranscript = uniqueTranscripts.length ? uniqueTranscripts.join(' ').trim() : '';
+      console.log("Combined transcript to send:", fullTranscript);
+      
+      if (fullTranscript) {
+        // Send the transcript to Dialogflow
+        const dfMessenger = document.querySelector('df-messenger');
+        if (dfMessenger) {
           try {
-            recognition.start();
-            console.log('Speech recognition restarted');
+            // Add the user's message to the chat UI
+            dfMessenger.renderCustomText(fullTranscript, false);
+            
+            // Send the message to Dialogflow
+            setTimeout(() => {
+              dfMessenger.sendRequest('query', fullTranscript);
+              console.log("✅ Transcript successfully sent to Dialogflow");
+            }, 100);
           } catch (error) {
-            console.error('Error restarting speech recognition:', error);
-            isRecognitionActive = false;
-            showListeningStatus(false);
-            
-            // Update UI using the new UI elements and structure
-            const micToggleButton = document.getElementById('mic-toggle-button');
-            const micStatusText = document.getElementById('mic-status-text');
-            
-            if (micToggleButton) {
-              micToggleButton.classList.remove('mic-active');
-              micToggleButton.classList.add('mic-inactive');
-            }
-            
-            if (micStatusText) {
-              micStatusText.textContent = 'Start Speaking';
-            }
+            console.error("Error sending transcript:", error);
           }
-        }, 10);
+        }
+      } 
+      else if (!speechDetectedInSession) {
+        console.log("⚠️ No speech detected in session");
+        // Only show warning if no speech was detected in the entire session
+        showNoSpeechDetectedWarning();
       }
-    });
-
-  /**
-   * Process speech recognition results with improved accuracy
-   */
-// Update the result event handler to track speech detection
-recognition.addEventListener('result', (event) => {
-  // Mark that speech was detected in this session
-  speechDetectedInSession = true;
-  
-  console.log("Speech recognition result:", event.results);
-  
-  const latestResult = event.results[event.results.length - 1];
-  const isFinal = latestResult.isFinal;
-  
-  // Find the alternative with highest confidence
-  let bestMatch = latestResult[0].transcript;
-  let highestConfidence = latestResult[0].confidence;
-  
-  // Check all alternatives for better accuracy
-  for (let i = 1; i < latestResult.length; i++) {
-    if (latestResult[i].confidence > highestConfidence) {
-      bestMatch = latestResult[i].transcript;
-      highestConfidence = latestResult[i].confidence;
+      
+      // Reset transcripts and speech detection flag
+      currentTranscript = '';
+      allTranscripts = [];
+      speechDetectedInSession = false;
+      processedResults.clear(); // Clear processed results for the next session
+      
+      // Update UI using the new UI elements and structure
+      const micToggleButton = document.getElementById('mic-toggle-button');
+      const micStatusText = document.getElementById('mic-status-text');
+      
+      if (micToggleButton) {
+        micToggleButton.classList.remove('mic-active');
+        micToggleButton.classList.add('mic-inactive');
+      }
+      
+      if (micStatusText) {
+        micStatusText.textContent = 'Start Speaking';
+      }
+      
+      // Update recording status display
+      showListeningStatus(false);
+    } 
+    else {
+      // Recognition ended unexpectedly, restart it
+      setTimeout(() => {
+        try {
+          recognition.start();
+          console.log('Speech recognition restarted');
+        } catch (error) {
+          console.error('Error restarting speech recognition:', error);
+          isRecognitionActive = false;
+          showListeningStatus(false);
+          
+          // Update UI using the new UI elements and structure
+          const micToggleButton = document.getElementById('mic-toggle-button');
+          const micStatusText = document.getElementById('mic-status-text');
+          
+          if (micToggleButton) {
+            micToggleButton.classList.remove('mic-active');
+            micToggleButton.classList.add('mic-inactive');
+          }
+          
+          if (micStatusText) {
+            micStatusText.textContent = 'Start Speaking';
+          }
+        }
+      }, 10);
     }
-  }
-  
-  // Process final results only (when speech segment is complete)
-  if (isFinal) {
-    currentTranscript = bestMatch;
-    allTranscripts.push(bestMatch);
-    console.log("Final transcript segment:", bestMatch, "Confidence:", highestConfidence);
-  } else {
-    // For interim results, just log but don't add to transcript collection
-    console.log("Interim transcript:", bestMatch, "Confidence:", highestConfidence);
-  }
-});
+  });
 
   /**
    * Handle recognition errors with better error messages
@@ -863,6 +853,45 @@ recognition.addEventListener('result', (event) => {
     
     currentTranscript = '';
     allTranscripts = [];
+    processedResults.clear();
+  }
+  
+  // Start recognition function
+  function startSpeechRecognition() {
+    if (!isRecognitionActive) {
+      // Stop any ongoing audio playback
+      if (window.audioElement) {
+        window.audioElement.pause();
+        window.audioElement = null;
+        console.log('ElevenLabs audio playback interrupted');
+      }
+      
+      // Cancel any ongoing speech synthesis
+      if (window.speechSynthesis.speaking) {
+        window.speechWasInterrupted = true;
+        console.log('Speech interrupted by user');
+        window.speechSynthesis.cancel();
+      }
+      
+      // Reset variables for new recording
+      currentTranscript = '';
+      allTranscripts = [];
+      speechDetectedInSession = false; // Reset the speech detection flag
+      processedResults.clear(); // Clear processed results tracker
+      
+      // Start recognition
+      try {
+        recognition.start();
+        isRecognitionActive = true;
+        showListeningStatus(true);
+        console.log('Speech recognition started');
+        
+      } catch (error) {
+        console.error('Error starting speech recognition:', error);
+        showError('Failed to start speech recognition');
+        resetMicUI();
+      }
+    }
   }
   
   /**
