@@ -4,8 +4,15 @@
     <title>Home</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/elevenlabs-js@latest/dist/elevenlabs.min.js"></script>
+    <!-- favicon -->
+    <link rel="icon" href="https://demo.mobilize-ai.com/img/logo/ev3_logo.svg" />
 </head>
 <body>
+   <!-- Add the logo container at the top -->
+   <div class="logo-container">
+    <img src="https://demo.mobilize-ai.com/img/logo/dish_logo.svg" alt="DISH Logo" class="logo">
+    <img src="https://demo.mobilize-ai.com/img/logo/ev3_logo.svg" alt="Mobilize AI Logo" class="logo">
+</div>  
    <!-- Add this right after the opening <body> tag -->
   <div id="modal-overlay" class="modal-overlay">
     <div class="modal-content">
@@ -38,6 +45,8 @@
       </form>
     </div>
   </div>
+<!-- Add this right after the df-messenger element -->
+<div id="speech-status" style="position: fixed; bottom: 115px; left: 50%; transform: translateX(-50%); color: #007bff; font-weight: bold; background-color: rgba(255,255,255,0.9); padding: 10px 15px; border-radius: 8px; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.15); font-size: 16px; z-index: 1002;"></div>
    <!--End of Popup  -->
     <link rel="stylesheet" href="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/themes/df-messenger-default.css">
     <script src="https://www.gstatic.com/dialogflow-console/fast/df-messenger/prod/v1/df-messenger.js"></script>
@@ -50,15 +59,10 @@
       intent="WELCOME"
       >
       <df-messenger-chat
-       chat-title="Hybrid DISH Agent"
+       chat-title="DISH Ev3 Global"
        >
       </df-messenger-chat>
-    </df-messenger>
-    <button id="start-voice-input" class="voice-button">
-      <i class="fas fa-microphone"></i>
-    </button>
-    <div id="speech-status" style="position: fixed; bottom: 115px; right: 20px; color: #007bff; font-weight: bold; background-color: rgba(255,255,255,0.8); padding: 5px 10px; border-radius: 5px; display: none;"></div>
-    <div id="transcription-display" style="position: fixed; bottom: 100px; left: 20px; color: #333; font-weight: bold; background-color: rgba(255,255,255,0.95); padding: 12px 15px; border-radius: 8px; max-width: 80%; width: 400px; text-align: left; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-left: 4px solid #007bff; z-index: 1100; display: none; transition: all 0.3s ease;"></div>
+   </df-messenger>
     <div id="error-message" style="position: fixed; bottom: 85px; right: 20px; color: red;"></div>
     <style>
       df-messenger {
@@ -69,13 +73,36 @@
         --df-messenger-chat-background: #f3f6fc;
         --df-messenger-message-user-background: #d3e3fd;
         --df-messenger-message-bot-background: #fff;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        width: 80%;
-        height: 100%;
+        top: 10%;
+        right: 60%;
+        bottom: 200%;
+        left: 35%;
+        width: 30%;
+        height: 45%;
       }
+        /* Logo container styling */
+        .logo-container {
+            position: fixed;
+            top: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            z-index: 1005;
+        }
+        
+        .logo {
+            height: 50px;
+            width: auto;
+            object-fit: contain;
+            transition: all 0.3s ease;
+        }
+        
+        .logo:hover {
+            transform: scale(1.05);
+        }      
       .voice-button {
         position: fixed;
         bottom: 20px;
@@ -223,50 +250,323 @@
         box-shadow: 0 0 15px rgba(255, 0, 0, 0.7);
         transform: scale(1.1);
       }
-    </style>
+      .mic-controls {
+    position: fixed;
+    z-index: 1001;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: all 0.3s ease;
+  }
+  
+  .initialize-mic-button {
+    padding: 12px 24px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .initialize-mic-button:hover {
+    background-color: #0069d9;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,123,255,0.4);
+  }
+  
+  /* Microphone button after initialization */
+  #mic-active-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+  
+  .mic-button {
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    width: auto;
+  }
+  
+  .mic-button:focus {
+    outline: none;
+  }
+  
+  .mic-button-inner {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    transition: all 0.3s ease;
+  }
+  
+  .mic-icon {
+    font-size: 24px;
+    color: #5f6368;
+    transition: all 0.3s ease;
+  }
+  
+  /* Inactive state */
+  .mic-inactive .mic-button-inner {
+    background-color: white;
+  }
+  .mic-inactive .mic-icon {
+    color: #5f6368;
+  }
+  #mic-status-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: #5f6368;
+    transition: all 0.3s ease;
+  }
+  
+  /* Active state */
+  .mic-active .mic-button-inner {
+    background-color: #ea4335;
+    animation: pulse-mic 2s infinite;
+  }
+  .mic-active .mic-icon {
+    color: white;
+  }
+  .mic-active #mic-status-text {
+    color: #ea4335;
+    font-weight: 600;
+  }
+  
+  /* Pulse animation for active mic */
+  @keyframes pulse-mic {
+    0% {
+      box-shadow: 0 0 0 0 rgba(234, 67, 53, 0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(234, 67, 53, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(234, 67, 53, 0);
+    }
+  }
+  
+  /* Sound wave animation */
+/* Sound wave container - positioned outside the button */
+.sound-wave {
+  position: absolute;
+  width: 200%; /* Wider than the button to extend outside */
+  height: 200%; /* Taller than the button to extend outside */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  top: -50%; /* Move up to center vertically */
+  left: -50%; /* Move left to center horizontally */
+  pointer-events: none; /* Allow clicks to pass through */
+}
+
+.mic-active .sound-wave {
+  opacity: 1;
+}
+  
+  .sound-wave span {
+  position: absolute;
+  width: 4px; /* Slightly thicker for better visibility */
+  background-color: rgba(234, 67, 53, 0.8); /* Red color to match active mic */
+  border-radius: 6px;
+  animation: sound-wave-animation 1.2s infinite ease-in-out;
+  box-shadow: 0 0 4px rgba(234, 67, 53, 0.5); /* Subtle glow effect */
+}
+  
+/* Position wave bars outside the button */
+.sound-wave span:nth-child(1) {
+  height: 15px;
+  right: 20px; /* Position to the right of the button */
+  top: 40%; /* Position vertically */
+  animation-delay: 0s;
+}
+
+.sound-wave span:nth-child(2) {
+  height: 25px;
+  right: 30px; /* Position to the right of the button */
+  top: 35%; /* Position vertically */
+  animation-delay: 0.2s;
+}
+
+.sound-wave span:nth-child(3) {
+  height: 20px;
+  right: 40px; /* Position to the right of the button */
+  top: 38%; /* Position vertically */
+  animation-delay: 0.4s;
+}
+
+.sound-wave span:nth-child(4) {
+  height: 15px;
+  right: 50px; /* Position to the right of the button */
+  top: 42%; /* Position vertically */
+  animation-delay: 0.6s;
+}
+
+/* Left side sound waves (optional addition) */
+.sound-wave span:nth-child(5) {
+  height: 18px;
+  left: 20px; /* Position to the left of the button */
+  top: 40%; /* Position vertically */
+  animation-delay: 0.3s;
+}
+
+.sound-wave span:nth-child(6) {
+  height: 23px;
+  left: 30px; /* Position to the left of the button */
+  top: 35%; /* Position vertically */
+  animation-delay: 0.1s;
+}
+
+.sound-wave span:nth-child(7) {
+  height: 16px;
+  left: 40px; /* Position to the left of the button */
+  top: 38%; /* Position vertically */
+  animation-delay: 0.5s;
+}
+
+.sound-wave span:nth-child(8) {
+  height: 12px;
+  left: 50px; /* Position to the left of the button */
+  top: 42%; /* Position vertically */
+  animation-delay: 0.7s;
+}
+  @keyframes sound-wave-animation {
+  0% {
+    transform: scaleY(0.4);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleY(0.4);
+    opacity: 0.7;
+  }
+}
+/* Warning state for mic button */
+.mic-warning .mic-button-inner {
+  box-shadow: 0 0 15px rgba(234, 67, 53, 0.7);
+}
+
+/* Add warning pulsing animation */
+@keyframes warning-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(234, 67, 53, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(234, 67, 53, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(234, 67, 53, 0);
+  }
+}
+
+.mic-warning .mic-button-inner {
+  animation: warning-pulse 1s ease-in-out;
+}
+</style>
 <!--  -->
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       // Apply blur to background elements
       const dfMessenger = document.querySelector('df-messenger');
-      const voiceButton = document.getElementById('start-voice-input');
+      const micControls = document.getElementById('mic-controls');
       
-      dfMessenger.classList.add('blur-background');
-      voiceButton.classList.add('blur-background');
+      if (dfMessenger) {
+        dfMessenger.classList.add('blur-background');
+      }
+      
+      // Hide the mic controls initially
+      if (micControls) {
+        micControls.style.display = 'none';
+      }
       
       // Handle form submission
       const userInfoForm = document.getElementById('user-info-form');
-      userInfoForm.addEventListener('submit', function(event) {
-        event.preventDefault();
-        
-        // Get form values
-        const firstName = document.getElementById('firstName').value.trim();
-        const position = document.getElementById('position').value.trim();
-        const lastJob = document.getElementById('lastJob').value.trim();
-        
-        // Validate inputs
-        if (!firstName || !position || !lastJob) {
-          alert('Please fill in all fields');
-          return;
-        }
-        
-        // Store values in global variables to be used by setUserInformation
-        window.userInfo = {
-          firstName: firstName,
-          position: position,
-          lastJob: lastJob
-        };
-        
-        // Remove blur effect
-        dfMessenger.classList.remove('blur-background');
-        voiceButton.classList.remove('blur-background');
-        
-        // Hide modal
-        document.getElementById('modal-overlay').style.display = 'none';
-        
-        // Initialize the chatbot with user info
-        initializeAgent();
-      });
+      if (userInfoForm) {
+        userInfoForm.addEventListener('submit', function(event) {
+          event.preventDefault();
+          
+          // Get form values
+          const firstName = document.getElementById('firstName').value.trim();
+          const position = document.getElementById('position').value.trim();
+          const lastJob = document.getElementById('lastJob').value.trim();
+          
+          // Validate inputs
+          if (!firstName || !position || !lastJob) {
+            alert('Please fill in all fields');
+            return;
+          }
+          
+          // Store values in global variables to be used by setUserInformation
+          window.userInfo = {
+            firstName: firstName,
+            position: position,
+            lastJob: lastJob
+          };
+          
+          // Remove blur effect
+          if (dfMessenger) {
+            dfMessenger.classList.remove('blur-background');
+          }
+          
+          // Hide modal
+          document.getElementById('modal-overlay').style.display = 'none';
+          
+          // Show mic controls and position them
+          if (micControls) {
+                micControls.style.display = 'flex';
+                // Position the mic controls properly to avoid overlap
+                const dfRect = dfMessenger.getBoundingClientRect();
+                micControls.style.position = 'fixed';
+                
+                // Calculate the position - ensure it's below the Dialogflow widget with adequate spacing
+                // but also check if it would be too low on the screen
+                const proposedTop = dfRect.bottom + 30;
+                const screenHeight = window.innerHeight;
+                
+                if (proposedTop > screenHeight - 150) {
+                  // If it would be too low, position it at the bottom of the screen with padding
+                  micControls.style.bottom = '30px';
+                  micControls.style.top = 'auto';
+                } else {
+                  // Otherwise position it below the widget
+                  micControls.style.top = proposedTop + 'px';
+                  micControls.style.bottom = 'auto';
+                }
+                
+                micControls.style.left = '50%';
+              }
+          
+          // Initialize the chatbot with user info
+          initializeAgent();
+        });
+      }
     });
     
     function initializeAgent() {
@@ -274,93 +574,119 @@
     }
   </script>
 <!-- //  -->
+
 <script>
-  const startVoiceInputButton = document.getElementById('start-voice-input');
+  // Speech recognition setup
   const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-  recognition.lang = 'en-US';
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
-  recognition.continuous = true;
   
+  // Configure recognition settings for better quality
+  recognition.lang = 'en-US';
+  recognition.interimResults = true; 
+  recognition.maxAlternatives = 5;  
+  recognition.continuous = true;   
+  
+  // Global variables
   let isRecognitionActive = false;
   let currentTranscript = '';
   let allTranscripts = [];
   let speechWasInterrupted = false;
   
-  function showListeningStatus(isListening) {
+  /**
+   * Shows or hides the listening status indicator
+   */
+   function showListeningStatus(isListening) {
     const speechStatus = document.getElementById('speech-status');
-    if (isListening) {
-      speechStatus.textContent = "Listening...";
-      speechStatus.style.display = "block";
-      speechStatus.classList.add('listening');
-    } else {
-      speechStatus.style.display = "none";
-      speechStatus.classList.remove('listening');
+    const micToggleButton = document.getElementById('mic-toggle-button');
+    
+    if (speechStatus) {
+      if (isListening) {
+        // speechStatus.textContent = "Listening...";
+        // speechStatus.style.display = "block";
+        // speechStatus.classList.add('listening');
+      } else {
+        speechStatus.style.display = "none";
+      }
+    }
+    
+    // Also update the mic button visual state
+    if (micToggleButton && isListening) {
+      micToggleButton.classList.add('mic-active');
+      micToggleButton.classList.remove('mic-inactive');
+    } else if (micToggleButton) {
+      micToggleButton.classList.add('mic-inactive');
+      micToggleButton.classList.remove('mic-active');
+    }
+  }
+
+  function showSpeechStatus(isSpeaking) {
+    const speechStatus = document.getElementById('speech-status');
+    
+    if (speechStatus) {
+      if (isSpeaking) {
+        speechStatus.textContent = "Speaking...";
+        speechStatus.style.display = "block";
+        speechStatus.classList.add('speaking');
+      } else {
+        speechStatus.style.display = "none";
+      }
+    }
+  }
+  /**
+   * Handle the end of a recognition session
+   */
+// Update the result event handler to track speech detection
+recognition.addEventListener('result', (event) => {
+  // Mark that speech was detected in this session
+  speechDetectedInSession = true;
+  
+  console.log("Speech recognition result:", event.results);
+  
+  const latestResult = event.results[event.results.length - 1];
+  const isFinal = latestResult.isFinal;
+  
+  // Find the alternative with highest confidence
+  let bestMatch = latestResult[0].transcript;
+  let highestConfidence = latestResult[0].confidence;
+  
+  // Check all alternatives for better accuracy
+  for (let i = 1; i < latestResult.length; i++) {
+    if (latestResult[i].confidence > highestConfidence) {
+      bestMatch = latestResult[i].transcript;
+      highestConfidence = latestResult[i].confidence;
     }
   }
   
-  startVoiceInputButton.addEventListener('click', () => {
-    if (!isRecognitionActive) {
-    // Add this at the beginning of the if block
-    if (audioElement) {
-      audioElement.pause();
-      audioElement = null;
-      console.log('ElevenLabs audio playback interrupted');
-    }
-    
-    // Existing code continues...
-    if (window.speechSynthesis.speaking) {
-      speechWasInterrupted = true;
-      console.log('Speech interrupted by user');
-    }
-    window.speechSynthesis.cancel();
-      if (window.speechSynthesis.speaking) {
-        speechWasInterrupted = true;
-        console.log('Speech interrupted by user');
-      }
-      window.speechSynthesis.cancel();
-      
-      currentTranscript = '';
-      allTranscripts = [];
-      startVoiceInputButton.innerHTML = '<i class="fas fa-stop"></i>';
-      startVoiceInputButton.classList.add('listening');
-      startVoiceInputButton.setAttribute('title', 'Click to stop and send transcript');
-      recognition.start();
-      isRecognitionActive = true;
-      showListeningStatus(true);
-      
-      // const transcriptionDisplay = document.getElementById('transcription-display');
-      // transcriptionDisplay.innerHTML = '<i class="fas fa-comment-dots" style="margin-right: 8px; color: #007bff;"></i> <span style="color: #007bff;">Listening for speech...</span>';
-      // transcriptionDisplay.style.display = 'block';
-    } else {
-      recognition.stop();
-      isRecognitionActive = false;
-      startVoiceInputButton.innerHTML = '<i class="fas fa-microphone"></i>';
-      startVoiceInputButton.classList.remove('listening', 'ready-to-send');
-      startVoiceInputButton.setAttribute('title', 'Click to start speaking');
-      showListeningStatus(false);
-      console.log('Stop requested');
-    }
-  });
+  // Process final results only (when speech segment is complete)
+  if (isFinal) {
+    currentTranscript = bestMatch;
+    allTranscripts.push(bestMatch);
+    console.log("Final transcript segment:", bestMatch, "Confidence:", highestConfidence);
+  } else {
+    // For interim results, just log but don't add to transcript collection
+    console.log("Interim transcript:", bestMatch, "Confidence:", highestConfidence);
+  }
+});
 
-  // This function finalizes transcript in the end event
-  recognition.addEventListener('end', () => {
-    if (!isRecognitionActive) {
-      // The user pressed stop, so finalize & send
-      console.log("Transcript segments before sending:", JSON.stringify(allTranscripts));
-      let fullTranscript = allTranscripts.length ? allTranscripts.join(' ').trim() : '';
-      console.log("Combined transcript to send:", fullTranscript);
-      
-      const transcriptionDisplay = document.getElementById('transcription-display');
-      if (fullTranscript) {
-        // transcriptionDisplay.innerHTML = `<i class="fas fa-paper-plane" style="margin-right: 8px; color: #28a745;"></i>
-        //   <span style="color: #28a745;">Sending:</span> 
-        //   <span style="font-weight: normal;">${fullTranscript}</span>`;
-        // transcriptionDisplay.style.display = 'block';
-        
-        const dfMessenger = document.querySelector('df-messenger');
+// Update the recognition.end event handler - only show warning when mic has stopped
+recognition.addEventListener('end', () => {
+  // Always clear the speech detection timer when recognition ends
+  clearTimeout(speechDetectionTimer);
+  
+  if (!isRecognitionActive) {
+    // Recognition ended because user stopped it
+    console.log("Transcript segments before sending:", JSON.stringify(allTranscripts));
+    let fullTranscript = allTranscripts.length ? allTranscripts.join(' ').trim() : '';
+    console.log("Combined transcript to send:", fullTranscript);
+    
+    if (fullTranscript) {
+      // Send the transcript to Dialogflow
+      const dfMessenger = document.querySelector('df-messenger');
+      if (dfMessenger) {
         try {
+          // Add the user's message to the chat UI
           dfMessenger.renderCustomText(fullTranscript, false);
+          
+          // Send the message to Dialogflow
           setTimeout(() => {
             dfMessenger.sendRequest('query', fullTranscript);
             console.log("✅ Transcript successfully sent to Dialogflow");
@@ -368,100 +694,152 @@
         } catch (error) {
           console.error("Error sending transcript:", error);
         }
-        
-        setTimeout(() => {
-          transcriptionDisplay.style.display = 'none';
-        }, 1500);
-      } else {
-        console.log("⚠️ No transcript content to send");
-        transcriptionDisplay.style.display = 'block';
-        transcriptionDisplay.innerHTML = `<i class="fas fa-exclamation-triangle" style="margin-right: 8px; color: #ffc107;"></i>
-          <span style="color: #ffc107;">No speech detected.</span>`;
-        setTimeout(() => {
-          transcriptionDisplay.style.display = 'none';
-        }, 2000);
       }
-      currentTranscript = '';
-      allTranscripts = [];
-    } else {
-      // If still active, user wants continuous listening
-      setTimeout(() => {
-        try {
-          recognition.start();
-          console.log('Speech recognition restarted');
-        } catch (error) {
-          console.error('Error restarting speech recognition:', error);
-          isRecognitionActive = false;
-          startVoiceInputButton.innerHTML = '<i class="fas fa-microphone"></i>';
-          startVoiceInputButton.classList.remove('listening');
-          showListeningStatus(false);
-        }
-      }, 10);
+    } 
+    else if (!speechDetectedInSession) {
+      console.log("⚠️ No speech detected in session");
+      // Only show warning if no speech was detected in the entire session
+      showNoSpeechDetectedWarning();
     }
-  });
-
-  recognition.addEventListener('result', (event) => {
-    console.log("Speech recognition result:", event.results);
     
-    const latestTranscript = event.results[event.results.length - 1][0].transcript;
-    currentTranscript = latestTranscript;
-    allTranscripts.push(latestTranscript);
-    console.log("Current transcript segments:", allTranscripts);
+    // Reset transcripts and speech detection flag
+    currentTranscript = '';
+    allTranscripts = [];
+    speechDetectedInSession = false;
     
-    const transcriptionDisplay = document.getElementById('transcription-display');
-    // transcriptionDisplay.innerHTML = `
-    //   <i class="fas fa-comment-dots" style="margin-right: 8px; color: #007bff;"></i> 
-    //   <span style="color: #007bff;">Transcribing:</span> 
-    //   <span style="font-weight: normal;">${latestTranscript}</span>
-    //   <div style="margin-top: 8px; font-size: 12px; color: #666; text-align: right;">
-    //     <i class="fas fa-info-circle"></i> Click <i class="fas fa-stop" style="color: #ff0000;"></i> to send
-    //   </div>
-    // `;
-    // transcriptionDisplay.style.display = 'block';
-    startVoiceInputButton.classList.add('ready-to-send');
-  });
+    // Update UI using the new UI elements and structure
+    const micToggleButton = document.getElementById('mic-toggle-button');
+    const micStatusText = document.getElementById('mic-status-text');
+    
+    if (micToggleButton) {
+      micToggleButton.classList.remove('mic-active');
+      micToggleButton.classList.add('mic-inactive');
+    }
+    
+    if (micStatusText) {
+      micStatusText.textContent = 'Start Speaking';
+    }
+    
+    // Update recording status display
+    showListeningStatus(false);
+  } 
+      else {
+        // Recognition ended unexpectedly, restart it
+        setTimeout(() => {
+          try {
+            recognition.start();
+            console.log('Speech recognition restarted');
+          } catch (error) {
+            console.error('Error restarting speech recognition:', error);
+            isRecognitionActive = false;
+            showListeningStatus(false);
+            
+            // Update UI using the new UI elements and structure
+            const micToggleButton = document.getElementById('mic-toggle-button');
+            const micStatusText = document.getElementById('mic-status-text');
+            
+            if (micToggleButton) {
+              micToggleButton.classList.remove('mic-active');
+              micToggleButton.classList.add('mic-inactive');
+            }
+            
+            if (micStatusText) {
+              micStatusText.textContent = 'Start Speaking';
+            }
+          }
+        }, 10);
+      }
+    });
 
+  /**
+   * Process speech recognition results with improved accuracy
+   */
+// Update the result event handler to track speech detection
+recognition.addEventListener('result', (event) => {
+  // Mark that speech was detected in this session
+  speechDetectedInSession = true;
+  
+  console.log("Speech recognition result:", event.results);
+  
+  const latestResult = event.results[event.results.length - 1];
+  const isFinal = latestResult.isFinal;
+  
+  // Find the alternative with highest confidence
+  let bestMatch = latestResult[0].transcript;
+  let highestConfidence = latestResult[0].confidence;
+  
+  // Check all alternatives for better accuracy
+  for (let i = 1; i < latestResult.length; i++) {
+    if (latestResult[i].confidence > highestConfidence) {
+      bestMatch = latestResult[i].transcript;
+      highestConfidence = latestResult[i].confidence;
+    }
+  }
+  
+  // Process final results only (when speech segment is complete)
+  if (isFinal) {
+    currentTranscript = bestMatch;
+    allTranscripts.push(bestMatch);
+    console.log("Final transcript segment:", bestMatch, "Confidence:", highestConfidence);
+  } else {
+    // For interim results, just log but don't add to transcript collection
+    console.log("Interim transcript:", bestMatch, "Confidence:", highestConfidence);
+  }
+});
+
+  /**
+   * Handle recognition errors with better error messages
+   */
   recognition.addEventListener('error', (event) => {
-    console.error('Speech recognition error detected: ' + event.error);
-    const errorMessage = document.getElementById('error-message');
+    console.error('Speech recognition error detected:', event.error);
+    showError('Speech recognition error: ' + event.error);
     
-    switch (event.error) {
-      case 'no-speech':
-        errorMessage.textContent = 'No speech detected.';
-        break;
-      case 'audio-capture':
-        errorMessage.textContent = 'Microphone access denied or not available.';
-        stopRecognition();
-        break;
-      case 'not-allowed':
-        errorMessage.textContent = 'Permission to use the microphone was denied.';
-        stopRecognition();
-        break;
-      default:
-        errorMessage.textContent = 'An error occurred during speech recognition.';
-        if (event.error !== 'aborted') {
-          stopRecognition();
-        }
+    // Update UI
+    isRecognitionActive = false;
+    showListeningStatus(false);
+    
+    const micToggle = document.getElementById('mic-toggle');
+    if (micToggle) {
+      micToggle.checked = false;
     }
-    
-    // Clear error message after a timeout
-    if (event.error) {
-      setTimeout(() => {
-        if (!errorMessage.textContent.startsWith('Transcribing:')) {
-          errorMessage.textContent = '';
-          errorMessage.style.color = 'red'; 
-        }
-      }, 3000);
+    const micStatusText = document.getElementById('mic-status-text');
+    if (micStatusText) {
+      micStatusText.textContent = 'Unmute Mic';
     }
   });
   
+  /**
+   * Stop recognition completely
+   */
   function stopRecognition() {
     isRecognitionActive = false;
-    startVoiceInputButton.innerHTML = '<i class="fas fa-microphone"></i>';
-    startVoiceInputButton.classList.remove('listening');
+    
+    try {
+      recognition.stop();
+    } catch (e) {
+      console.error("Error stopping recognition:", e);
+    }
+    
     showListeningStatus(false);
+    
     currentTranscript = '';
     allTranscripts = [];
+  }
+  
+  /**
+   * Show error message briefly
+   */
+  function showError(message) {
+    const errorMessage = document.getElementById('error-message');
+    if (errorMessage) {
+      errorMessage.textContent = message;
+      errorMessage.style.display = 'block';
+      
+      // Hide after 3 seconds
+      setTimeout(() => {
+        errorMessage.style.display = 'none';
+      }, 3000);
+    }
   }
 </script>
 <!--  -->
@@ -662,22 +1040,18 @@
  * @description Displays the speaking status indicator
  * @param {boolean} isSpeaking - Flag indicating if speech synthesis is active
  */
-  function showSpeechStatus(isSpeaking) {
-    const speechStatus = document.getElementById('speech-status');
-    if (isSpeaking) {
-      speechStatus.textContent = "Speaking...";
-      speechStatus.style.display = "block";
-    } else {
-      speechStatus.style.display = "none";
-    }
+ function showSpeechStatus(isSpeaking) {
+  const speechStatus = document.getElementById('speech-status');
+  if (speechStatus) {
+    speechStatus.style.display = "none";
   }
-
+}
 // Add these global variables at the top of your script section with other globals
 // Remove these lines
 let audioElement = null;
 const ELEVEN_LABS_API_KEY = document.getElementById('elevenLabsKey').value; // API Key for ElevenLabs
 console.log('ElevenLabs API Key:', ELEVEN_LABS_API_KEY);
-const VOICE_ID = 'kdmDKE6EkgrWrrykO9Qt'; // Voice ID for ElevenLabs API
+const VOICE_ID = 'tnSpp4vdxKPjI9w0GnoV'; // HOPE Voice ID for ElevenLabs API
 
 // Get the current API key from the input field
 function getElevenLabsApiKey() {
@@ -855,5 +1229,208 @@ async function speakText(text) {
     console.log("AI Message: ", AIMessage);
   }
 </script>
+<!-- Replace the current mic-controls div with this enhanced version -->
+<div id="mic-controls" class="mic-controls">
+  <!-- Initial state - request permission -->
+  <button id="initialize-mic" class="initialize-mic-button">
+    <i class="fas fa-microphone mic-status-icon"></i>
+    Enable Microphone
+  </button>
+  
+  <!-- Microphone control after initialization -->
+  <div id="mic-active-controls" style="display: none;">
+    <button id="mic-toggle-button" class="mic-button mic-inactive">
+      <div class="mic-button-inner">
+        <i class="fas fa-microphone mic-icon"></i>
+        <div id="sound-wave" class="sound-wave">
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+      <span id="mic-status-text">Start Speaking</span>
+    </button>
+  </div>
+</div>
+<!--  -->
+<script>
+      let speechDetectionTimer = null;
+      const SPEECH_DETECTION_TIMEOUT = 5000; // 5 seconds timeout
+      let speechDetectedInSession = false;
+      // Start recognition function
+      // Modify the startSpeechRecognition function
+      function startSpeechRecognition() {
+  if (!isRecognitionActive) {
+    // Stop any ongoing audio playback
+    if (window.audioElement) {
+      window.audioElement.pause();
+      window.audioElement = null;
+      console.log('ElevenLabs audio playback interrupted');
+    }
+    
+    // Cancel any ongoing speech synthesis
+    if (window.speechSynthesis.speaking) {
+      window.speechWasInterrupted = true;
+      console.log('Speech interrupted by user');
+      window.speechSynthesis.cancel();
+    }
+    
+    // Reset variables for new recording
+    currentTranscript = '';
+    allTranscripts = [];
+    speechDetectedInSession = false; // Reset the speech detection flag
+    
+    // Start recognition
+    try {
+      recognition.start();
+      isRecognitionActive = true;
+      showListeningStatus(true);
+      console.log('Speech recognition started');
+      
+    } catch (error) {
+      console.error('Error starting speech recognition:', error);
+      showError('Failed to start speech recognition');
+      resetMicUI();
+    }
+  }
+}
+      // Add this new function to show the warning
+      function showNoSpeechDetectedWarning() {
+        const micToggleButton = document.getElementById('mic-toggle-button');
+        const micStatusText = document.getElementById('mic-status-text');
+        const speechStatus = document.getElementById('speech-status');
+        
+        // Show warning message
+        if (speechStatus) 
+        {
+          speechStatus.textContent = "No speech detected. Please try again.";
+          speechStatus.style.display = "block";
+          speechStatus.style.color = "#ea4335"; // Red color for warning
+          
+          // Hide after 3 seconds
+          setTimeout(() => {
+            if (!isRecognitionActive) {
+              speechStatus.style.display = "none";
+            }
+          }, 3000);
+        }
+        
+        // Update mic status text
+        if (micStatusText) {
+          micStatusText.textContent = "No speech detected";
+          micStatusText.style.color = "#ea4335";
+          
+          // Reset after 2 seconds
+          setTimeout(() => {
+            if (micToggleButton && !micToggleButton.classList.contains('mic-active')) {
+              micStatusText.textContent = "Start Speaking";
+              micStatusText.style.color = "#5f6368";
+            }
+          }, 2000);
+        }
+        
+        // Add a subtle visual indication
+        if (micToggleButton) {
+          micToggleButton.classList.add('mic-warning');
+          
+          setTimeout(() => {
+            micToggleButton.classList.remove('mic-warning');
+          }, 2000);
+        }
+      }
+    document.addEventListener('DOMContentLoaded', function() {
+      // Reference the UI elements
+      const initializeMicButton = document.getElementById('initialize-mic');
+      const micActiveControls = document.getElementById('mic-active-controls');
+      const micToggleButton = document.getElementById('mic-toggle-button');
+      const micStatusText = document.getElementById('mic-status-text');
+      
+      // Mic initialization button
+      if (initializeMicButton) {
+        initializeMicButton.addEventListener('click', function() {
+          // Request microphone permissions
+          navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(function(stream) {
+              console.log('Microphone permission granted');
+              
+              // Permission granted, show the active mic controls
+              initializeMicButton.style.display = 'none';
+              if (micActiveControls) {
+                micActiveControls.style.display = 'flex';
+              }
+              
+              // Release the stream since we're just checking permissions
+              stream.getTracks().forEach(track => track.stop());
+            })
+            .catch(function(err) {
+              console.error('Error getting microphone permission:', err);
+              showError('Microphone access denied. Please allow microphone permissions and try again.');
+            });
+        });
+      }
+      
+      // Mic toggle button
+      if (micToggleButton) {
+        micToggleButton.addEventListener('click', function() {
+          // Toggle between active/inactive states
+          const isCurrentlyActive = micToggleButton.classList.contains('mic-active');
+          
+          if (!isCurrentlyActive) {
+            // Activate microphone
+            micToggleButton.classList.remove('mic-inactive');
+            micToggleButton.classList.add('mic-active');
+            micStatusText.textContent = 'Listening...';
+            // Start recognition
+            startSpeechRecognition();
+          } else {
+            // Deactivate microphone
+            micToggleButton.classList.remove('mic-active');
+            micToggleButton.classList.add('mic-inactive');
+            micStatusText.textContent = 'Start Speaking';
+            // Stop recognition
+            stopSpeechRecognition();
+          }
+        });
+      }  
+      // Update the function to match the naming convention used in the micControls script:
+      function stopSpeechRecognition() {
+        if (isRecognitionActive) {
+          recognition.stop();
+          isRecognitionActive = false;
+          showListeningStatus(false);
+          clearTimeout(speechDetectionTimer);
+          console.log('Stop requested by user');
+        }
+      }
+      
+      // Reset mic UI to inactive state
+      function resetMicUI() {
+        const micToggleButton = document.getElementById('mic-toggle-button');
+        const micStatusText = document.getElementById('mic-status-text');
+        
+        if (micToggleButton) {
+          micToggleButton.classList.remove('mic-active');
+          micToggleButton.classList.add('mic-inactive');
+        }
+        
+        if (micStatusText) {
+          micStatusText.textContent = 'Start Speaking';
+        }
+      }
+      
+      // Update the recognition end event to handle UI updates
+      recognition.addEventListener('end', function() {
+        if (!isRecognitionActive) {
+          resetMicUI();
+          // Rest of your existing recognition end handler...
+        }
+      });
+    });
+  </script>
 </body>
 </html>
